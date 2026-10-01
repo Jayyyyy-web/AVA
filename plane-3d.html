@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project AVA — 3D Concept</title>
+<meta name="description" content="Project AVA — a stylized 3D concept visual of a commercial airliner with sensor-awareness nodes. Concept art only.">
+<style>
+  :root{
+    --bg:#070a0f; --line:#1d2a3a; --ink:#e8f0f8; --muted:#8aa0b6;
+    --accent:#35e0c9;
+    --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
+    --sans:"Segoe UI",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);overflow:hidden}
+  #app{position:fixed;inset:0}
+  canvas{display:block}
+  .hud{position:fixed;inset:0;pointer-events:none;z-index:2}
+  .bar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;
+       padding:18px 22px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(7,10,15,.85),transparent)}
+  .logo{font-family:var(--mono);letter-spacing:.3em;font-weight:600}
+  .bar a{pointer-events:auto;color:var(--accent);text-decoration:none;font-family:var(--mono);font-size:12px;letter-spacing:.15em}
+  .legend{position:absolute;left:22px;bottom:22px;font-family:var(--mono);font-size:12px;line-height:2;color:var(--muted)}
+  .legend .row{display:flex;align-items:center;gap:10px}
+  .dot{width:10px;height:10px;border-radius:50%;box-shadow:0 0 12px currentColor}
+  .concept{position:absolute;right:22px;bottom:22px;max-width:300px;border:1px dashed var(--accent);border-radius:8px;
+           padding:10px 14px;font-family:var(--mono);font-size:11px;color:#bdeee6;background:rgba(53,224,201,.06);text-align:right}
+  .hint{position:absolute;top:calc(50% + 120px);left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:12px;
+        color:var(--muted);letter-spacing:.2em;opacity:.6;animation:fade 3s ease 3s forwards}
+  @keyframes fade{to{opacity:0}}
+  .loading{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);letter-spacing:.3em;color:var(--muted)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="loading" id="loading">LOADING 3D…</div>
+<div class="hud">
+  <div class="bar">
+    <div class="logo">AVA // 3D CONCEPT</div>
+    <a href="index.html">← BACK</a>
+  </div>
+  <div class="hint">DRAG TO ROTATE · SCROLL TO ZOOM</div>
+  <div class="legend">
+    <div class="row"><span class="dot" style="color:#4aa3ff"></span> TRAFFIC NODE</div>
+    <div class="row"><span class="dot" style="color:#c78bff"></span> WEATHER NODE</div>
+    <div class="row"><span class="dot" style="color:#ffb454"></span> TERRAIN NODE</div>
+    <div class="row"><span class="dot" style="color:#35e0c9"></span> VISUAL NODE</div>
+  </div>
+  <div class="concept">✈ CONCEPT ART ONLY — stylized commercial airliner, illustrative form, no real dimensions or engineering.</div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+const app = document.getElementById('app');
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x070a0f, 0.025);
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 200);
+camera.position.set(9, 4, 11);
+
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+app.appendChild(renderer.domElement);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.7;
+controls.minDistance = 7;
+controls.maxDistance = 35;
+controls.target.set(0,0,0);
+
+// lighting
+scene.add(new THREE.AmbientLight(0x4a6fa5, 0.7));
+const key = new THREE.DirectionalLight(0xffffff, 0.95); key.position.set(6,10,7); scene.add(key);
+const rim = new THREE.DirectionalLight(0x35e0c9, 0.55); rim.position.set(-8,-2,-5); scene.add(rim);
+
+// subtle ground grid
+const grid = new THREE.GridHelper(80, 40, 0x1d2a3a, 0x121a26);
+grid.position.y = -3.2; scene.add(grid);
+
+// ---- stylized commercial airliner (built from primitives, concept art) ----
+const plane = new THREE.Group();
+const bodyMat = new THREE.MeshStandardMaterial({color:0xeef2f6, metalness:0.35, roughness:0.45});
+const accentMat = new THREE.MeshStandardMaterial({color:0x4aa3ff, metalness:0.4, roughness:0.4});
+const darkMat = new THREE.MeshStandardMaterial({color:0x2a3340, metalness:0.6, roughness:0.5});
+const glassMat = new THREE.MeshStandardMaterial({color:0x0e1621, metalness:0.2, roughness:0.2, emissive:0x1b3a52, emissiveIntensity:0.5});
+
+// fuselage along Z
+const fuse = new THREE.Mesh(new THREE.CylinderGeometry(0.7,0.7,9,40), bodyMat);
+fuse.rotation.x = Math.PI/2; plane.add(fuse);
+// nose (rounded)
+const nose = new THREE.Mesh(new THREE.SphereGeometry(0.7,32,24,0,Math.PI*2,0,Math.PI/2), bodyMat);
+nose.rotation.x = -Math.PI/2; nose.position.z = 4.5; plane.add(nose);
+// cockpit glass
+const cockpit = new THREE.Mesh(new THREE.SphereGeometry(0.55,24,18,0,Math.PI*2,0,Math.PI/2.4), glassMat);
+cockpit.rotation.x = -Math.PI/2; cockpit.position.set(0,0.12,4.25); plane.add(cockpit);
+// tail cone (taper)
+const tailCone = new THREE.Mesh(new THREE.ConeGeometry(0.7,1.8,32), bodyMat);
+tailCone.rotation.x = -Math.PI/2; tailCone.position.z = -5.2; plane.add(tailCone);
+
+// cabin windows (emissive stripe of dots)
+const winMat = new THREE.MeshStandardMaterial({color:0x9fd8ff, emissive:0x4aa3ff, emissiveIntensity:0.8});
+for(let i=0;i<18;i++){
+  const w = new THREE.Mesh(new THREE.SphereGeometry(0.07,10,10), winMat);
+  w.position.set(0.66, 0.18, 3.4 - i*0.42); plane.add(w);
+}
+// accent cheat-line
+const line = new THREE.Mesh(new THREE.CylinderGeometry(0.705,0.705,7.6,40,1,true,0,0.5), accentMat);
+line.rotation.x = Math.PI/2; line.position.set(0,0,-0.4); plane.add(line);
+
+// main wings (swept)
+function wing(side){
+  const shape = new THREE.Shape();
+  shape.moveTo(0,0); shape.lineTo(0,-2.4); shape.lineTo(4.2,-3.4); shape.lineTo(4.4,-3.1); shape.lineTo(0.5,0); shape.lineTo(0,0);
+  const geo = new THREE.ExtrudeGeometry(shape,{depth:0.12,bevelEnabled:false});
+  const m = new THREE.Mesh(geo, bodyMat);
+  m.rotation.x = Math.PI/2; m.rotation.z = side>0? 0 : Math.PI;
+  m.position.set(side*0.1, -0.1, 0.4); m.scale.x = side;
+  return m;
+}
+plane.add(wing(1), wing(-1));
+
+// engines under wings
+function engine(x){
+  const g = new THREE.Group();
+  const nac = new THREE.Mesh(new THREE.CylinderGeometry(0.33,0.33,1.3,24), darkMat);
+  nac.rotation.x = Math.PI/2; g.add(nac);
+  const intake = new THREE.Mesh(new THREE.TorusGeometry(0.33,0.06,12,24), accentMat);
+  intake.position.z = 0.65; g.add(intake);
+  g.position.set(x, -0.75, 1.3); return g;
+}
+plane.add(engine(2.9), engine(-2.9));
+
+// vertical stabilizer
+const vshape = new THREE.Shape();
+vshape.moveTo(0,0); vshape.lineTo(0,2.1); vshape.lineTo(1.5,2.1); vshape.lineTo(1.9,0); vshape.lineTo(0,0);
+const vtail = new THREE.Mesh(new THREE.ExtrudeGeometry(vshape,{depth:0.1,bevelEnabled:false}), bodyMat);
+vtail.rotation.y = Math.PI/2; vtail.position.set(0.05,0.4,-5); plane.add(vtail);
+const vfin = new THREE.Mesh(new THREE.ExtrudeGeometry(vshape,{depth:0.02,bevelEnabled:false}), accentMat);
+vfin.rotation.y = Math.PI/2; vfin.position.set(0.09,0.4,-5); vfin.scale.set(0.7,0.7,1); plane.add(vfin);
+
+// horizontal stabilizers
+function htail(side){
+  const s = new THREE.Shape();
+  s.moveTo(0,0); s.lineTo(0,-1); s.lineTo(1.8,-1.4); s.lineTo(0.3,0); s.lineTo(0,0);
+  const m = new THREE.Mesh(new THREE.ExtrudeGeometry(s,{depth:0.09,bevelEnabled:false}), bodyMat);
+  m.rotation.x = Math.PI/2; m.position.set(side*0.1,0.1,-4.9); m.scale.x = side;
+  return m;
+}
+plane.add(htail(1), htail(-1));
+
+scene.add(plane);
+
+// ---- sensor-awareness nodes (the AVA concept) ----
+const nodeData = [
+  {c:0x4aa3ff, p:[0,0.1,4.9]},    // traffic — nose
+  {c:0xc78bff, p:[0,0.9,-4.2]},   // weather — tail fin
+  {c:0xffb454, p:[0,-0.8,0.5]},   // terrain — belly
+  {c:0x35e0c9, p:[4.3,-0.2,-2.4]} // visual — wingtip
+];
+const nodes = [];
+nodeData.forEach(d=>{
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.16,16,16),
+    new THREE.MeshBasicMaterial({color:d.c}));
+  core.position.set(...d.p); plane.add(core);
+  const halo = new THREE.Mesh(new THREE.SphereGeometry(0.16,16,16),
+    new THREE.MeshBasicMaterial({color:d.c, transparent:true, opacity:0.25}));
+  core.add(halo); nodes.push(halo);
+});
+
+// render loop
+const clock = new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  nodes.forEach((h,i)=>{ const s = 1 + 0.9*Math.abs(Math.sin(t*1.5 + i)); h.scale.setScalar(s); });
+  plane.position.y = Math.sin(t*0.6)*0.15;
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+document.getElementById('loading').style.display='none';
+
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

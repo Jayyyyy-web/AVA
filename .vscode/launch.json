@@ -8,6 +8,12 @@
       "file": "${workspaceFolder}/index.html"
     },
     {
+      "type": "msedge",
+      "request": "launch",
+      "name": "Open AVA 3D model",
+      "file": "${workspaceFolder}/plane-3d.html"
+    },
+    {
       "type": "chrome",
       "request": "launch",
       "name": "Open AVA site (Chrome)",
