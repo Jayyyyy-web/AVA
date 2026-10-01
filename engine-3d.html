@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Project AVA — Turbofan 3D Cutaway</title>
-<meta name="description" content="Interactive 3D cutaway of a commercial turbofan — fan, compressor, combustor, turbine — with animated airflow showing where efficiency is won.">
+<meta name="description" content="Detailed interactive 3D cutaway of a commercial turbofan — fan, LP booster, HP compressor, combustor, HP/LP turbines — with animated airflow showing where efficiency is won.">
 <style>
   :root{
-    --bg:#070a0f; --line:#1d2a3a; --ink:#e8f0f8; --muted:#8aa0b6;
-    --fan:#4aa3ff; --comp:#35e0c9; --comb:#ff8a3c; --turb:#ff5a4a; --byp:#7fb3ff;
+    --bg:#05070c; --line:#1d2a3a; --ink:#e8f0f8; --muted:#8aa0b6;
+    --fan:#4aa3ff; --comp:#35e0c9; --comb:#ff8a3c; --turb:#ff5a4a; --byp:#7fb3ff; --neon:#38f0ff;
     --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
     --sans:"Segoe UI",system-ui,-apple-system,sans-serif;
   }
@@ -18,22 +18,26 @@
   canvas{display:block}
   .hud{position:fixed;inset:0;pointer-events:none;z-index:2}
   .bar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;
-       padding:16px 22px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(7,10,15,.9),transparent)}
+       padding:16px 22px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(5,7,12,.92),transparent)}
   .logo{font-family:var(--mono);letter-spacing:.3em;font-weight:600;font-size:14px}
   .bar a{pointer-events:auto;color:var(--comp);text-decoration:none;font-family:var(--mono);font-size:12px;letter-spacing:.15em}
-  .panel{position:absolute;left:22px;top:72px;width:270px;border:1px solid var(--line);border-radius:12px;
-         padding:16px;background:rgba(10,16,23,.82);backdrop-filter:blur(6px)}
+  .panel{position:absolute;left:22px;top:72px;width:280px;border:1px solid var(--line);border-radius:12px;
+         padding:16px;background:rgba(8,12,20,.8);backdrop-filter:blur(7px)}
   .panel h4{margin:0 0 12px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted)}
-  .stage{display:flex;gap:10px;align-items:flex-start;margin:11px 0}
+  .stage{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
   .stage .sw{width:12px;height:12px;border-radius:3px;margin-top:4px;flex:none;box-shadow:0 0 10px currentColor}
   .stage b{font-size:13px;display:block}
   .stage span{font-size:11.5px;color:var(--muted);line-height:1.4}
-  .flowtag{position:absolute;top:50%;left:50%;transform:translate(-50%,-140px);font-family:var(--mono);
-           font-size:11px;letter-spacing:.3em;color:var(--muted);opacity:.7}
-  .concept{position:absolute;right:22px;bottom:20px;max-width:300px;border:1px dashed var(--comp);border-radius:8px;
+  .ctrls{position:absolute;right:22px;top:72px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+         background:rgba(8,12,20,.8);backdrop-filter:blur(7px);pointer-events:auto;font-family:var(--mono);font-size:11px;letter-spacing:.08em}
+  .ctrls label{display:flex;align-items:center;gap:8px;margin:7px 0;color:var(--muted);cursor:pointer}
+  .ctrls input{accent-color:var(--neon);cursor:pointer}
+  .flowtag{position:absolute;top:50%;left:50%;transform:translate(-50%,-180px);font-family:var(--mono);
+           font-size:11px;letter-spacing:.3em;color:var(--muted);opacity:.65}
+  .concept{position:absolute;right:22px;bottom:18px;max-width:290px;border:1px dashed var(--comp);border-radius:8px;
            padding:10px 14px;font-family:var(--mono);font-size:11px;color:#bdeee6;background:rgba(53,224,201,.06);text-align:right}
-  .hint{position:absolute;bottom:20px;left:22px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.15em;
-        animation:fade 3s ease 4s forwards}
+  .hint{position:absolute;bottom:18px;left:22px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.15em;
+        animation:fade 3s ease 5s forwards}
   @keyframes fade{to{opacity:.25}}
   .loading{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);letter-spacing:.3em;color:var(--muted)}
 </style>
@@ -49,11 +53,17 @@
   <div class="flowtag">◄ ◄ ◄ &nbsp; AIRFLOW &nbsp; ◄ ◄ ◄</div>
   <div class="panel">
     <h4>STAGES &amp; WHERE EFFICIENCY IS WON</h4>
-    <div class="stage"><span class="sw" style="color:var(--fan)"></span><div><b>Fan</b><span>Moves most of the air <em>around</em> the core — the big propulsive-efficiency lever (bypass).</span></div></div>
-    <div class="stage"><span class="sw" style="color:var(--comp)"></span><div><b>Compressor</b><span>Squeezes the core air. Higher pressure ratio → better thermal efficiency.</span></div></div>
-    <div class="stage"><span class="sw" style="color:var(--comb)"></span><div><b>Combustor</b><span>Fuel burns. Hotter gas (&gt;1500°C) means more work per kg of fuel.</span></div></div>
-    <div class="stage"><span class="sw" style="color:var(--turb)"></span><div><b>Turbine</b><span>Extracts power to drive the fan &amp; compressor. Materials set the heat limit.</span></div></div>
-    <div class="stage"><span class="sw" style="color:var(--byp)"></span><div><b>Bypass flow</b><span>The cool air going around the core — most of the thrust, quietly.</span></div></div>
+    <div class="stage"><span class="sw" style="color:var(--fan)"></span><div><b>Fan</b><span>Moves most of the air <em>around</em> the core — the big propulsive lever (bypass).</span></div></div>
+    <div class="stage"><span class="sw" style="color:var(--comp)"></span><div><b>LP booster + HP compressor</b><span>Many rotor+stator stages squeeze the core air. Higher pressure ratio → better thermal efficiency.</span></div></div>
+    <div class="stage"><span class="sw" style="color:var(--comb)"></span><div><b>Annular combustor</b><span>Fuel burns. Hotter gas (&gt;1500°C) = more work per kg of fuel.</span></div></div>
+    <div class="stage"><span class="sw" style="color:var(--turb)"></span><div><b>HP + LP turbines</b><span>Extract power to drive the compressor &amp; fan. Materials set the heat limit.</span></div></div>
+    <div class="stage"><span class="sw" style="color:var(--byp)"></span><div><b>Bypass flow</b><span>Cool air around the core through guide-vane struts — most of the thrust, quietly.</span></div></div>
+  </div>
+  <div class="ctrls">
+    <label><input type="checkbox" id="cNacelle" checked> NACELLE</label>
+    <label><input type="checkbox" id="cFlow" checked> AIRFLOW</label>
+    <label><input type="checkbox" id="cSpin" checked> ROTATION</label>
+    <label><input type="checkbox" id="cAuto" checked> AUTO-ORBIT</label>
   </div>
   <div class="hint">DRAG · ROTATE &nbsp; | &nbsp; SCROLL · ZOOM</div>
   <div class="concept">✈ CONCEPT CUTAWAY — schematic, not to scale; illustrates principles, not a design.</div>
@@ -61,18 +71,26 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
 const app = document.getElementById('app');
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x070a0f, 0.03);
+scene.fog = new THREE.FogExp2(0x05070c, 0.028);
 
 const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.1, 200);
-camera.position.set(9, 3.5, 9);
+camera.position.set(10, 3.6, 10);
 
 const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
 app.appendChild(renderer.domElement);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -80,144 +98,187 @@ controls.enableDamping = true;
 controls.autoRotate = true;
 controls.autoRotateSpeed = 0.5;
 controls.minDistance = 6;
-controls.maxDistance = 30;
+controls.maxDistance = 34;
 
-scene.add(new THREE.AmbientLight(0x5a7694, 0.7));
-const key = new THREE.DirectionalLight(0xffffff, 1.1); key.position.set(6,9,7); scene.add(key);
-const rim = new THREE.DirectionalLight(0x35e0c9, 0.4); rim.position.set(-7,-2,-5); scene.add(rim);
+// bloom post-processing for the futuristic glow
+const composer = new THREE.EffectComposer(renderer);
+composer.addPass(new THREE.RenderPass(scene, camera));
+const bloom = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.85, 0.5, 0.82);
+composer.addPass(bloom);
 
-// Engine lies along Z. Air flows from +Z (front/intake) to -Z (back/exhaust).
+scene.add(new THREE.AmbientLight(0x5a7694, 0.65));
+const key = new THREE.DirectionalLight(0xffffff, 1.15); key.position.set(6,9,7); scene.add(key);
+const rim = new THREE.DirectionalLight(0x35e0c9, 0.45); rim.position.set(-7,-2,-5); scene.add(rim);
+const underglow = new THREE.PointLight(0x38f0ff, 0.6, 20); underglow.position.set(0,-4,0); scene.add(underglow);
+
+const COL = {fan:0x4aa3ff, comp:0x35e0c9, comb:0xff8a3c, turb:0xff5a4a, metal:0xaebccb, neon:0x38f0ff, dark:0x222b36};
+
+// Engine along Z. Air flows +Z (front) -> -Z (back).
 const engine = new THREE.Group();
 scene.add(engine);
 
-const COL = {fan:0x4aa3ff, comp:0x35e0c9, comb:0xff8a3c, turb:0xff5a4a, metal:0xaebccb};
+const lpRotors = [], hpRotors = [];
 
-// central shaft
-const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,10,16),
-  new THREE.MeshStandardMaterial({color:0x33404e, metalness:0.8, roughness:0.4}));
-shaft.rotation.x = Math.PI/2; engine.add(shaft);
+// materials
+const metalMat = (c, e=0.08)=> new THREE.MeshStandardMaterial({color:c, metalness:0.72, roughness:0.3, emissive:c, emissiveIntensity:e, side:THREE.DoubleSide});
+const darkMat  = new THREE.MeshStandardMaterial({color:0x222b36, metalness:0.8, roughness:0.4});
 
-// --- translucent nacelle (cowl) so internals are visible from any angle ---
-const nacelle = new THREE.Mesh(
-  new THREE.CylinderGeometry(2.25,1.9,8.4,48,1,true),
-  new THREE.MeshStandardMaterial({color:0x5c86b8, metalness:0.3, roughness:0.4,
-    transparent:true, opacity:0.1, side:THREE.DoubleSide}));
-nacelle.rotation.x = Math.PI/2; nacelle.position.z = -0.3; engine.add(nacelle);
-// intake & exhaust rims
-function rim2(z,r,c){ const t=new THREE.Mesh(new THREE.TorusGeometry(r,0.05,12,48),
-  new THREE.MeshStandardMaterial({color:c,metalness:0.6,roughness:0.3,emissive:c,emissiveIntensity:0.3}));
-  t.position.z=z; engine.add(t); return t; }
-rim2(3.9, 2.25, COL.fan);
-rim2(-4.5, 1.9, COL.turb);
+// shafts: LP (thin, long) + HP drum (shorter, fatter)
+const lpShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,11,16), darkMat);
+lpShaft.rotation.x = Math.PI/2; engine.add(lpShaft);
+const hpDrum = new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.32,3.0,24), new THREE.MeshStandardMaterial({color:0x2c3845, metalness:0.85, roughness:0.35}));
+hpDrum.rotation.x = Math.PI/2; hpDrum.position.z = 1.1; hpRotors.push(hpDrum); engine.add(hpDrum);
 
-// --- spinner + fan ---
-const spinner = new THREE.Mesh(new THREE.ConeGeometry(0.4,0.9,24),
-  new THREE.MeshStandardMaterial({color:0x2a3340, metalness:0.7, roughness:0.4}));
-spinner.rotation.x = -Math.PI/2; spinner.position.z = 4.4; engine.add(spinner);
-
-const fan = new THREE.Group(); fan.position.z = 3.6;
-const fanHub = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,0.5,24),
-  new THREE.MeshStandardMaterial({color:0x2a3340, metalness:0.8, roughness:0.35}));
-fanHub.rotation.x = Math.PI/2; fan.add(fanHub);
-const fanBladeMat = new THREE.MeshStandardMaterial({color:COL.fan, metalness:0.6, roughness:0.3,
-  emissive:COL.fan, emissiveIntensity:0.12, side:THREE.DoubleSide});
-for(let i=0;i<22;i++){
-  const pivot = new THREE.Group();
-  const blade = new THREE.Mesh(new THREE.BoxGeometry(0.07,1.75,0.5), fanBladeMat);
-  blade.position.y = 1.15; blade.rotation.y = 0.55; // pitch
-  pivot.add(blade); pivot.rotation.z = (i/22)*Math.PI*2; fan.add(pivot);
-}
-engine.add(fan);
-
-// --- helper: a bladed disc (compressor / turbine stage) ---
-function stage(z, radius, color, nBlades, emissive){
+// ---- blade-row builders ----
+function rotorRow(z, tipR, hubR, n, color, emissive, pitch){
   const g = new THREE.Group(); g.position.z = z;
-  const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.2,0.2,0.16,20),
-    new THREE.MeshStandardMaterial({color:0x33404e, metalness:0.8, roughness:0.4}));
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(hubR,hubR,0.15,20), darkMat);
   hub.rotation.x = Math.PI/2; g.add(hub);
-  const mat = new THREE.MeshStandardMaterial({color:color, metalness:0.7, roughness:0.3,
-    emissive:color, emissiveIntensity:emissive||0.1, side:THREE.DoubleSide});
-  for(let i=0;i<nBlades;i++){
+  const mat = metalMat(color, emissive);
+  const h = tipR - hubR;
+  for(let i=0;i<n;i++){
     const pivot = new THREE.Group();
-    const h = radius-0.2;
-    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.05, h, 0.16), mat);
-    blade.position.y = 0.2 + h/2; blade.rotation.y = 0.4;
-    pivot.add(blade); pivot.rotation.z = (i/nBlades)*Math.PI*2; g.add(pivot);
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.045, h, 0.17), mat);
+    blade.position.y = hubR + h/2; blade.rotation.y = pitch;
+    pivot.add(blade); pivot.rotation.z = (i/n)*Math.PI*2; g.add(pivot);
   }
   return g;
 }
+function statorRow(z, tipR, hubR, n){
+  const g = new THREE.Group(); g.position.z = z;
+  const ring = new THREE.Mesh(new THREE.TorusGeometry((tipR+hubR)/2, 0.03, 8, 40), darkMat);
+  g.add(ring);
+  const mat = new THREE.MeshStandardMaterial({color:0x3a4653, metalness:0.5, roughness:0.6, side:THREE.DoubleSide});
+  const h = tipR - hubR;
+  for(let i=0;i<n;i++){
+    const pivot = new THREE.Group();
+    const vane = new THREE.Mesh(new THREE.BoxGeometry(0.035, h, 0.12), mat);
+    vane.position.y = hubR + h/2; vane.rotation.y = -0.35;
+    pivot.add(vane); pivot.rotation.z = (i/n)*Math.PI*2; g.add(pivot);
+  }
+  engine.add(g); return g;
+}
 
-// compressor: radius shrinks as pressure rises
-const spools = [];
-let z = 3.0;
-const compR = [1.05,0.95,0.86,0.78,0.70,0.63];
-compR.forEach((r,i)=>{ const s=stage(z, r, COL.comp, 20, 0.08); engine.add(s); spools.push(s); z-=0.42; });
+// ---- spinner + fan ----
+const spinner = new THREE.Mesh(new THREE.ConeGeometry(0.42,1.0,28), metalMat(0x2a3340,0.05));
+spinner.rotation.x = -Math.PI/2; spinner.position.z = 4.9; lpRotors.push(spinner); engine.add(spinner);
+const fan = rotorRow(4.2, 2.05, 0.42, 24, COL.fan, 0.18, 0.6); lpRotors.push(fan); engine.add(fan);
+// fan exit / outlet guide vanes (static) + bypass struts
+statorRow(3.7, 2.1, 0.5, 30);
 
-// combustor: glowing ring
-const combustor = new THREE.Mesh(new THREE.CylinderGeometry(0.72,0.72,1.0,32,1,true),
-  new THREE.MeshStandardMaterial({color:COL.comb, emissive:COL.comb, emissiveIntensity:1.2,
-    transparent:true, opacity:0.85, side:THREE.DoubleSide}));
-combustor.rotation.x = Math.PI/2; combustor.position.z = z-0.1; engine.add(combustor);
-const combLight = new THREE.PointLight(0xff8a3c, 2.2, 6); combLight.position.z = z-0.1; engine.add(combLight);
-const combZ = z-0.1;
-z -= 1.1;
+// ---- LP booster (3 stages, cool) ----
+let z = 3.35;
+const boostR = [1.0,0.92,0.85];
+boostR.forEach((r,i)=>{ const ro=rotorRow(z, r, 0.33, 22, COL.comp, 0.10, 0.45); lpRotors.push(ro); engine.add(ro); statorRow(z-0.2, r, 0.33, 26); z-=0.4; });
 
-// turbine: radius grows again
-const turbR = [0.70,0.80,0.92,1.02];
-turbR.forEach((r,i)=>{ const s=stage(z, r, COL.turb, 24, 0.22); engine.add(s); spools.push(s); z-=0.42; });
+// ---- HP compressor (7 stages, shrinking) ----
+const hpcR = [0.82,0.76,0.70,0.64,0.58,0.53,0.48];
+hpcR.forEach((r,i)=>{ const ro=rotorRow(z, r, 0.33, 24, COL.comp, 0.12, 0.42); hpRotors.push(ro); engine.add(ro); statorRow(z-0.18, r, 0.33, 28); z-=0.36; });
 
-// exhaust cone
-const exhaust = new THREE.Mesh(new THREE.ConeGeometry(0.6,1.6,28),
-  new THREE.MeshStandardMaterial({color:0x2a3340, metalness:0.7, roughness:0.45}));
-exhaust.rotation.x = Math.PI/2; exhaust.position.z = z-0.5; engine.add(exhaust);
+// diffuser cone into combustor
+const diff = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.72,0.5,28,1,true), metalMat(0x33404e,0.05));
+diff.rotation.x = Math.PI/2; diff.position.z = z-0.1; engine.add(diff);
+z -= 0.5;
+
+// ---- annular combustor (glowing) with fuel nozzles ----
+const combZ = z-0.45;
+const combOuter = new THREE.Mesh(new THREE.CylinderGeometry(0.78,0.78,1.0,36,1,true),
+  new THREE.MeshStandardMaterial({color:COL.comb, emissive:COL.comb, emissiveIntensity:1.6, transparent:true, opacity:0.8, side:THREE.DoubleSide}));
+combOuter.rotation.x = Math.PI/2; combOuter.position.z = combZ; engine.add(combOuter);
+const combInner = new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,1.0,28,1,true),
+  new THREE.MeshStandardMaterial({color:0xffd08a, emissive:0xffb060, emissiveIntensity:1.4, side:THREE.DoubleSide}));
+combInner.rotation.x = Math.PI/2; combInner.position.z = combZ; engine.add(combInner);
+// fuel nozzle bumps around the front of the combustor
+for(let i=0;i<16;i++){
+  const p = new THREE.Group();
+  const nz = new THREE.Mesh(new THREE.SphereGeometry(0.08,12,12), metalMat(0xffce99,1.2));
+  nz.position.set(0,0.59, combZ+0.5); p.add(nz); p.rotation.z=(i/16)*Math.PI*2; engine.add(p);
+}
+const combLight = new THREE.PointLight(0xff8a3c, 2.6, 7); combLight.position.z = combZ; engine.add(combLight);
+z = combZ - 0.6;
+
+// ---- HP turbine (2 stages, hottest) ----
+const hptR = [0.60,0.70];
+hptR.forEach((r,i)=>{ const ro=rotorRow(z, r, 0.34, 28, COL.turb, 0.35, -0.5); hpRotors.push(ro); engine.add(ro); statorRow(z-0.18, r, 0.34, 30); z-=0.4; });
+// ---- LP turbine (4 stages, growing) ----
+const lptR = [0.78,0.88,0.98,1.06];
+lptR.forEach((r,i)=>{ const ro=rotorRow(z, r, 0.3, 30, COL.turb, 0.22, -0.5); lpRotors.push(ro); engine.add(ro); statorRow(z-0.18, r, 0.3, 32); z-=0.4; });
+
+// ---- exhaust cone + variable nozzle petals ----
+const exCone = new THREE.Mesh(new THREE.ConeGeometry(0.55,1.5,28), metalMat(0x2a3340,0.05));
+exCone.rotation.x = Math.PI/2; exCone.position.z = z-0.5; lpRotors.push(exCone); engine.add(exCone);
+for(let i=0;i<14;i++){
+  const p = new THREE.Group();
+  const petal = new THREE.Mesh(new THREE.BoxGeometry(0.22,0.5,0.03), metalMat(0x3a4653,0.06));
+  petal.position.set(0,1.0,z-0.3); petal.rotation.x=0.3; p.add(petal); p.rotation.z=(i/14)*Math.PI*2; engine.add(p);
+}
+
+// ---- nacelle (translucent) + neon accents ----
+const nacelleGrp = new THREE.Group();
+const nacelle = new THREE.Mesh(new THREE.CylinderGeometry(2.3,1.95,9.6,56,1,true),
+  new THREE.MeshStandardMaterial({color:0x5c86b8, metalness:0.35, roughness:0.4, transparent:true, opacity:0.09, side:THREE.DoubleSide}));
+nacelle.rotation.x = Math.PI/2; nacelle.position.z = 0.0; nacelleGrp.add(nacelle);
+// wireframe skin for a techy look
+const wire = new THREE.Mesh(nacelle.geometry.clone(),
+  new THREE.MeshBasicMaterial({color:0x2b4a63, wireframe:true, transparent:true, opacity:0.18}));
+wire.rotation.x = Math.PI/2; nacelleGrp.add(wire);
+// glowing intake lip + exhaust ring (these bloom)
+function neonRing(z,r,c,th){ const t=new THREE.Mesh(new THREE.TorusGeometry(r,th||0.05,16,64),
+  new THREE.MeshBasicMaterial({color:c})); t.position.z=z; nacelleGrp.add(t); return t; }
+neonRing(4.75, 2.3, COL.neon, 0.06);
+neonRing(-4.85, 1.95, COL.turb, 0.06);
+neonRing(3.7, 2.18, 0x2b6f8f, 0.03);
+engine.add(nacelleGrp);
+
+// bypass duct struts (outlet guide vanes connecting core to nacelle)
+for(let i=0;i<10;i++){
+  const p = new THREE.Group();
+  const strut = new THREE.Mesh(new THREE.BoxGeometry(0.06,1.1,0.4), metalMat(0x3a4653,0.04));
+  strut.position.set(0,1.5,3.4); strut.rotation.y=0.2; p.add(strut); p.rotation.z=(i/10)*Math.PI*2; engine.add(p);
+}
+
+// holographic floor grid
+const grid = new THREE.GridHelper(120, 60, 0x1d3344, 0x0f1a24);
+grid.position.y = -3.6; engine.add(grid);
 
 // ================= airflow particles =================
-const N = 900;
-const pos = new Float32Array(N*3);
-const col = new Float32Array(N*3);
-const meta = []; // {core, r, a, speed}
-const cBlue = new THREE.Color(0x7fb3ff), cCyan = new THREE.Color(0x35e0c9),
-      cHot = new THREE.Color(0xff8a3c), cRed = new THREE.Color(0xff5a4a);
+const N = 1100;
+const pos = new Float32Array(N*3), colr = new Float32Array(N*3);
+const meta = [];
+const cBlue=new THREE.Color(0x7fb3ff), cCyan=new THREE.Color(0x35e0c9), cHot=new THREE.Color(0xffb060), cRed=new THREE.Color(0xff5a4a);
 for(let i=0;i<N;i++){
-  const core = Math.random() < 0.42;
-  const r = core ? (0.18 + Math.random()*0.42) : (1.35 + Math.random()*0.75);
+  const core = Math.random() < 0.4;
+  const r = core ? (0.16+Math.random()*0.42) : (1.45+Math.random()*0.7);
   const a = Math.random()*Math.PI*2;
-  const speed = (core?0.045:0.06) + Math.random()*0.02;
-  const zz = 5 - Math.random()*10;
+  const speed = (core?0.05:0.065)+Math.random()*0.02;
+  const zz = 5.5 - Math.random()*11;
   meta.push({core,r,a,speed});
   pos[i*3]=Math.cos(a)*r; pos[i*3+1]=Math.sin(a)*r; pos[i*3+2]=zz;
-  const base = core?cCyan:cBlue;
-  col[i*3]=base.r; col[i*3+1]=base.g; col[i*3+2]=base.b;
+  const b = core?cCyan:cBlue; colr[i*3]=b.r; colr[i*3+1]=b.g; colr[i*3+2]=b.b;
 }
 const pg = new THREE.BufferGeometry();
 pg.setAttribute('position', new THREE.BufferAttribute(pos,3));
-pg.setAttribute('color', new THREE.BufferAttribute(col,3));
-const points = new THREE.Points(pg, new THREE.PointsMaterial({size:0.07, vertexColors:true,
-  transparent:true, opacity:0.9, depthWrite:false, blending:THREE.AdditiveBlending}));
+pg.setAttribute('color', new THREE.BufferAttribute(colr,3));
+const points = new THREE.Points(pg, new THREE.PointsMaterial({size:0.075, vertexColors:true, transparent:true, opacity:0.95, depthWrite:false, blending:THREE.AdditiveBlending}));
 engine.add(points);
 
+let flowOn = true;
 function updateFlow(){
-  const p = pg.attributes.position.array;
-  const c = pg.attributes.color.array;
+  if(!flowOn) return;
+  const p = pg.attributes.position.array, c = pg.attributes.color.array;
   for(let i=0;i<N;i++){
     const m = meta[i];
-    let zz = p[i*3+2] - m.speed*(1 + (m.core?1.2:0));
-    // core air accelerates through combustor/turbine
-    if(m.core && zz < combZ+0.6 && zz > combZ-2.2) zz -= 0.05;
-    if(zz < -5){ zz = 5; }
-    p[i*3+2] = zz;
-    p[i*3]   = Math.cos(m.a)*m.r;
-    p[i*3+1] = Math.sin(m.a)*m.r;
-    // recolor core stream by zone
+    let zz = p[i*3+2] - m.speed*(1+(m.core?1.3:0));
+    if(m.core && zz<combZ+0.6 && zz>combZ-2.4) zz -= 0.06;
+    if(zz < -5.5) zz = 5.5;
+    p[i*3+2]=zz; p[i*3]=Math.cos(m.a)*m.r; p[i*3+1]=Math.sin(m.a)*m.r;
     if(m.core){
-      let cc = cCyan;
-      if(zz < combZ+0.6 && zz > combZ-1.2) cc = cHot;
-      else if(zz <= combZ-1.2) cc = cRed;
+      let cc=cCyan;
+      if(zz<combZ+0.7 && zz>combZ-1.2) cc=cHot; else if(zz<=combZ-1.2) cc=cRed;
       c[i*3]=cc.r; c[i*3+1]=cc.g; c[i*3+2]=cc.b;
     }
   }
-  pg.attributes.position.needsUpdate = true;
-  pg.attributes.color.needsUpdate = true;
+  pg.attributes.position.needsUpdate=true; pg.attributes.color.needsUpdate=true;
 }
 
 // center & frame
@@ -226,16 +287,25 @@ const ctr = box.getCenter(new THREE.Vector3());
 engine.position.sub(ctr);
 controls.target.set(0,0,0);
 
+// UI controls
+let spinOn = true;
+document.getElementById('cNacelle').onchange = e=> nacelleGrp.visible = e.target.checked;
+document.getElementById('cFlow').onchange    = e=>{ flowOn = e.target.checked; points.visible = e.target.checked; };
+document.getElementById('cSpin').onchange    = e=> spinOn = e.target.checked;
+document.getElementById('cAuto').onchange    = e=> controls.autoRotate = e.target.checked;
+
 const clock = new THREE.Clock();
 function animate(){
   requestAnimationFrame(animate);
   const dt = clock.getDelta();
-  fan.rotation.z += dt*3.2;
-  spools.forEach((s,i)=> s.rotation.z += dt*(2.2 + i*0.15)*(i<6?1:-0.6));
-  combLight.intensity = 2.0 + Math.sin(clock.elapsedTime*18)*0.4;
+  if(spinOn){
+    lpRotors.forEach(r=> r.rotation.z += dt*2.4);
+    hpRotors.forEach(r=> r.rotation.z += dt*4.6);
+  }
+  combLight.intensity = 2.3 + Math.sin(clock.elapsedTime*16)*0.5;
   updateFlow();
   controls.update();
-  renderer.render(scene, camera);
+  composer.render();
 }
 animate();
 document.getElementById('loading').style.display='none';
@@ -243,6 +313,7 @@ document.getElementById('loading').style.display='none';
 addEventListener('resize', ()=>{
   camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
 });
 </script>
 </body>
