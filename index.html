@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Project AVA</title>
-<meta name="description" content="Project AVA — a concept exploration of multi-signal sensor fusion for commercial aviation situational awareness.">
+<meta name="description" content="Project AVA — a concept for an ultra-efficient commercial turbofan. How a jet engine turns fuel into distance, and where every percent of efficiency is won.">
 <style>
   :root{
     --bg:#070a0f; --bg2:#0c1118; --panel:#0e1621; --line:#1d2a3a;
     --ink:#e8f0f8; --muted:#8aa0b6; --accent:#35e0c9; --accent2:#4aa3ff;
-    --warn:#ff7a59; --glow:rgba(53,224,201,.35);
+    --hot:#ff8a3c; --glow:rgba(53,224,201,.35);
     --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
     --sans:"Segoe UI",system-ui,-apple-system,sans-serif;
   }
@@ -20,14 +20,13 @@
       radial-gradient(900px 500px at 80% -10%, rgba(74,163,255,.12), transparent 60%),
       radial-gradient(700px 500px at 0% 20%, rgba(53,224,201,.10), transparent 55%),
       var(--bg);
-    color:var(--ink); font-family:var(--sans); line-height:1.6;
-    -webkit-font-smoothing:antialiased;
+    color:var(--ink); font-family:var(--sans); line-height:1.6; -webkit-font-smoothing:antialiased;
   }
   .wrap{max-width:1040px;margin:0 auto;padding:0 20px}
   body::before{
-    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.35;
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.3;
     background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
-    background-size:44px 44px;mask-image:radial-gradient(circle at 50% 30%,#000,transparent 80%);
+    background-size:44px 44px;mask-image:radial-gradient(circle at 50% 25%,#000,transparent 80%);
   }
   header,section,footer{position:relative;z-index:1}
 
@@ -37,60 +36,51 @@
   .logo .mark::before,.logo .mark::after{content:"";position:absolute;background:var(--accent);opacity:.8}
   .logo .mark::before{left:50%;top:4px;bottom:4px;width:1px;transform:translateX(-50%)}
   .logo .mark::after{top:50%;left:4px;right:4px;height:1px;transform:translateY(-50%)}
+  .nav{display:flex;gap:20px}
   .nav a{color:var(--accent);text-decoration:none;font-family:var(--mono);font-size:12px;letter-spacing:.15em}
   .nav a:hover{text-shadow:0 0 12px var(--glow)}
 
-  .hero{padding:90px 0 70px;text-align:center}
+  .hero{padding:84px 0 60px;text-align:center}
   .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.4em;color:var(--accent);text-transform:uppercase}
-  h1{font-size:clamp(44px,9vw,104px);line-height:.95;margin:18px 0 10px;letter-spacing:.02em;
+  h1{font-size:clamp(42px,8vw,96px);line-height:.95;margin:16px 0 8px;letter-spacing:.02em;
      background:linear-gradient(180deg,#fff,#9fc4d8);-webkit-background-clip:text;background-clip:text;color:transparent}
-  .sub{max-width:660px;margin:14px auto 0;color:var(--muted);font-size:18px}
-  .pill{display:inline-block;margin-top:26px;padding:7px 16px;border:1px solid var(--line);border-radius:999px;
-        font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted);background:rgba(255,255,255,.02)}
-  .cta{display:inline-block;margin:26px 0 0 10px;padding:8px 18px;border:1px solid var(--accent);border-radius:999px;
-       font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--accent);text-decoration:none;box-shadow:0 0 18px -6px var(--glow)}
-  .cta:hover{background:rgba(53,224,201,.08)}
+  .hsub{font-size:clamp(18px,3vw,26px);color:var(--ink);margin:0 auto;max-width:620px;font-weight:500}
+  .sub{max-width:660px;margin:14px auto 0;color:var(--muted);font-size:17px}
+  .ctas{margin-top:30px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn{padding:10px 20px;border:1px solid var(--line);border-radius:999px;font-family:var(--mono);font-size:12px;
+       letter-spacing:.15em;color:var(--ink);text-decoration:none;transition:.2s}
+  .btn:hover{border-color:var(--accent);box-shadow:0 0 18px -6px var(--glow)}
+  .btn.p{border-color:var(--accent);color:var(--accent);background:rgba(53,224,201,.06)}
 
-  .concept{margin:36px auto 0;max-width:720px;border:1px dashed var(--accent);border-radius:10px;padding:14px 18px;
-           font-size:13px;color:#bdeee6;background:rgba(53,224,201,.05);font-family:var(--mono);letter-spacing:.03em}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:52px 0 0}
+  @media(max-width:720px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{border:1px solid var(--line);border-radius:14px;padding:20px;background:var(--panel);text-align:center}
+  .stat .v{font-size:30px;font-weight:700;color:var(--accent)}
+  .stat .l{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted);margin-top:6px;text-transform:uppercase}
 
-  .sec{padding:64px 0;border-top:1px solid var(--line)}
+  .sec{padding:60px 0;border-top:1px solid var(--line)}
   .sec h2{font-size:28px;margin:0 0 6px;display:flex;align-items:baseline;gap:14px}
   .sec h2 .n{font-family:var(--mono);font-size:13px;color:var(--accent)}
-  .lead{color:var(--muted);max-width:680px;margin:0 0 30px}
+  .lead{color:var(--muted);max-width:720px;margin:0 0 30px}
 
-  .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
-  .card{border:1px solid var(--line);border-radius:14px;padding:22px;background:
-        linear-gradient(180deg,var(--panel),rgba(14,22,33,.4));transition:.25s}
+  .eq{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;margin:10px 0 34px;
+      font-family:var(--mono);text-align:center}
+  .eq .term{border:1px solid var(--line);border-radius:12px;padding:16px 20px;background:var(--panel);min-width:150px}
+  .eq .term b{display:block;font-size:18px;color:var(--ink)}
+  .eq .term span{font-size:11px;color:var(--muted);letter-spacing:.1em}
+  .eq .op{font-size:24px;color:var(--accent)}
+
+  .grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .card{border:1px solid var(--line);border-radius:14px;padding:22px;background:linear-gradient(180deg,var(--panel),rgba(14,22,33,.4));transition:.25s}
   .card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 10px 40px -20px var(--glow)}
-  .card .ic{width:42px;height:42px;border-radius:10px;display:grid;place-items:center;margin-bottom:14px;
-            border:1px solid var(--line);font-size:20px;background:rgba(53,224,201,.06)}
-  .card h3{margin:0 0 6px;font-size:17px}
+  .card .tag{font-family:var(--mono);font-size:10px;letter-spacing:.15em;color:var(--accent);text-transform:uppercase}
+  .card h3{margin:6px 0 6px;font-size:18px}
   .card p{margin:0;color:var(--muted);font-size:14px}
+  .card .gain{margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--hot)}
 
-  .why{display:grid;grid-template-columns:1fr 1fr;gap:30px;align-items:center}
-  @media(max-width:720px){.why{grid-template-columns:1fr}}
-  .scope{aspect-ratio:1;border:1px solid var(--line);border-radius:50%;position:relative;max-width:300px;margin:0 auto;
-         background:radial-gradient(circle,rgba(53,224,201,.06),transparent 70%)}
-  .scope::before,.scope::after{content:"";position:absolute;background:var(--accent);opacity:.5}
-  .scope::before{left:50%;top:0;bottom:0;width:1px;transform:translateX(-50%)}
-  .scope::after{top:50%;left:0;right:0;height:1px;transform:translateY(-50%)}
-  .blip{position:absolute;width:12px;height:12px;border-radius:50%;transform:translate(-50%,-50%)}
-  .blip.real{background:var(--accent);box-shadow:0 0 18px var(--accent);left:58%;top:44%}
-  .blip.ghost{background:transparent;border:1px solid var(--muted);opacity:.55}
-  .ring{position:absolute;inset:18%;border:1px solid var(--line);border-radius:50%}
-  .ring.b{inset:34%}
-
-  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center;margin-top:10px}
-  @media(max-width:720px){.flow{grid-template-columns:1fr 1fr}}
-  .node{border:1px solid var(--line);border-radius:12px;padding:18px 10px;background:var(--panel)}
-  .node .lbl{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.15em;margin-top:8px}
-  .node .big{font-size:24px}
-  .fuse{margin-top:16px;text-align:center;border:1px solid var(--accent);border-radius:12px;padding:18px;
-        background:rgba(53,224,201,.05);font-family:var(--mono);letter-spacing:.1em;color:var(--accent)}
-
-  footer{padding:50px 0;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center}
+  footer{padding:46px 0;border-top:1px solid var(--line);color:var(--muted);font-size:13px;text-align:center}
   footer .mono{font-family:var(--mono);letter-spacing:.15em}
+  .srcnote{font-size:11px;color:var(--muted);max-width:720px;margin:20px auto 0;text-align:center}
 </style>
 </head>
 <body>
@@ -98,73 +88,104 @@
 
   <div class="bar">
     <div class="logo"><span class="mark"></span> AVA</div>
-    <div class="nav"><a href="plane-3d.html">3D CONCEPT →</a></div>
+    <div class="nav">
+      <a href="explainer.html">THE ENGINEERING</a>
+      <a href="engine-3d.html">3D CUTAWAY →</a>
+    </div>
   </div>
 
   <section class="hero">
     <div class="kicker">Project AVA</div>
     <h1>AVA</h1>
-    <p class="sub">A concept exploration of multi-signal sensor fusion for commercial aviation — the idea that situational awareness should weigh many signals together rather than trust any single instrument.</p>
-    <div>
-      <span class="pill">ADAPTIVE · VERIFIED · AWARENESS</span>
-      <a class="cta" href="plane-3d.html">VIEW 3D MODEL</a>
+    <p class="hsub">A concept for an ultra-efficient commercial turbofan.</p>
+    <p class="sub">Every 1% of fuel efficiency saved across a fleet is millions of gallons and tonnes of CO₂ a year. This project explores how a jet engine turns fuel into distance — and where each percent is actually won.</p>
+    <div class="ctas">
+      <a class="btn p" href="engine-3d.html">▶ EXPLORE THE 3D CUTAWAY</a>
+      <a class="btn" href="explainer.html">READ THE ENGINEERING</a>
     </div>
-    <div class="concept">✈ CONCEPT SHOWCASE — This page presents a high-level vision for civilian flight awareness. It is illustrative only and describes no certified or buildable system.</div>
-  </section>
 
-  <section class="sec">
-    <h2><span class="n">01</span> The problem</h2>
-    <p class="lead">A flight deck takes in many streams of information, and any single one can be misleading — a noisy return, a reflection, or a spurious alert can look just as real as the genuine picture. Leaning on one source invites mistakes.</p>
-    <div class="why">
-      <div>
-        <p style="color:var(--ink)">AVA starts from a simple observation: <strong>one signal is a guess; many signals, cross-checked, become confidence.</strong></p>
-        <p style="color:var(--muted)">The concept imagines treating traffic, weather, terrain, and visual cues as independent perspectives — and trusting the picture only where they agree, so uncertain returns fade into the background.</p>
-      </div>
-      <div class="scope" title="Illustration: one confirmed contact among uncertain returns">
-        <div class="ring"></div><div class="ring b"></div>
-        <div class="blip real"></div>
-        <div class="blip ghost" style="left:30%;top:60%"></div>
-        <div class="blip ghost" style="left:70%;top:30%"></div>
-        <div class="blip ghost" style="left:40%;top:28%"></div>
-      </div>
+    <div class="stats">
+      <div class="stat"><div class="v">~12.5:1</div><div class="l">Bypass ratio (modern GTF)</div></div>
+      <div class="stat"><div class="v">~60:1</div><div class="l">Overall pressure ratio</div></div>
+      <div class="stat"><div class="v">&gt;1500°C</div><div class="l">Turbine inlet temp</div></div>
+      <div class="stat"><div class="v">~20%</div><div class="l">Fuel-burn goal, open fan</div></div>
     </div>
   </section>
 
   <section class="sec">
-    <h2><span class="n">02</span> The idea: signal fusion</h2>
-    <p class="lead">Rather than leaning on one input, the AVA concept imagines drawing on the full spread of available awareness cues — then combining them so no single misleading signal carries a decision on its own.</p>
+    <h2><span class="n">01</span> What "efficient" actually means</h2>
+    <p class="lead">An engine's overall efficiency is the product of two separate battles — how well the core turns fuel into useful power, and how well that power is turned into thrust. You have to win both.</p>
+    <div class="eq">
+      <div class="term"><b>Thermal η</b><span>FUEL → CORE POWER</span></div>
+      <div class="op">×</div>
+      <div class="term"><b>Propulsive η</b><span>CORE POWER → THRUST</span></div>
+      <div class="op">=</div>
+      <div class="term" style="border-color:var(--accent)"><b>Overall η</b><span>FUEL → DISTANCE</span></div>
+    </div>
+    <p class="lead">Thermal efficiency rises with hotter, higher-pressure cores. Propulsive efficiency rises when you move a <em>lot</em> of air <em>gently</em> rather than a little air violently. Almost every design lever below pushes on one of these two.</p>
+  </section>
+
+  <section class="sec">
+    <h2><span class="n">02</span> Where the percent is won</h2>
+    <p class="lead">The efficiency levers a real high-efficiency turbofan leans on — each with the principle behind it and roughly what it buys.</p>
     <div class="grid">
-      <div class="card"><div class="ic">🛬</div><h3>Traffic</h3><p>Nearby aircraft as one independent view of the surrounding sky.</p></div>
-      <div class="card"><div class="ic">🌧️</div><h3>Weather</h3><p>Precipitation and wind patterns as a cross-check on conditions ahead.</p></div>
-      <div class="card"><div class="ic">⛰️</div><h3>Terrain</h3><p>Ground and obstacle awareness, weighed against the other channels.</p></div>
-      <div class="card"><div class="ic">👁️</div><h3>Visual</h3><p>Optical cues that an instrument-only view might miss.</p></div>
+      <div class="card">
+        <div class="tag">Propulsive</div><h3>Ultra-high bypass</h3>
+        <p>Push more air around the core, slower. Lower jet velocity means less wasted kinetic energy — the single biggest lever.</p>
+        <div class="gain">↓ fuel per unit thrust</div>
+      </div>
+      <div class="card">
+        <div class="tag">Propulsive</div><h3>Geared fan</h3>
+        <p>A reduction gearbox lets the big fan turn slowly while the LP turbine spins fast — each at its own sweet spot.</p>
+        <div class="gain">enables BPR ~12.5:1</div>
+      </div>
+      <div class="card">
+        <div class="tag">Propulsive</div><h3>Open (unducted) fan</h3>
+        <p>Drop the heavy nacelle entirely for an effective bypass ratio far beyond a ducted fan. The frontier concept.</p>
+        <div class="gain">~20% fuel-burn target</div>
+      </div>
+      <div class="card">
+        <div class="tag">Thermal</div><h3>Higher pressure ratio</h3>
+        <p>Squeeze the air harder before combustion. More compression means more work extracted per kilo of fuel.</p>
+        <div class="gain">OPR ~40 → ~60:1</div>
+      </div>
+      <div class="card">
+        <div class="tag">Thermal</div><h3>Hotter core</h3>
+        <p>Run the turbine inlet above the melting point of the blades — made possible by cooling and coatings.</p>
+        <div class="gain">&gt;1500°C inlet</div>
+      </div>
+      <div class="card">
+        <div class="tag">Materials</div><h3>Ceramic composites (CMCs)</h3>
+        <p>Parts that tolerate heat with far less cooling air — freeing that air to do useful work instead.</p>
+        <div class="gain">less cooling bleed</div>
+      </div>
+      <div class="card">
+        <div class="tag">Weight</div><h3>Composite fan & case</h3>
+        <p>Carbon-fibre blades and casings cut weight at the largest-diameter part of the engine.</p>
+        <div class="gain">↓ weight → ↓ fuel</div>
+      </div>
+      <div class="card">
+        <div class="tag">Fuel</div><h3>SAF &amp; hydrogen ready</h3>
+        <p>Efficiency is only half the carbon story — the frontier concepts run on 100% sustainable fuel or hydrogen.</p>
+        <div class="gain">↓ lifecycle CO₂</div>
+      </div>
     </div>
   </section>
 
   <section class="sec">
-    <h2><span class="n">03</span> How the concept thinks</h2>
-    <p class="lead">Each channel reports independently. A fusion layer compares them, and confidence rises only where they agree — the core principle behind filtering out false or uncertain signals.</p>
-    <div class="flow">
-      <div class="node"><div class="big">🛬</div><div class="lbl">TRAFFIC</div></div>
-      <div class="node"><div class="big">🌧️</div><div class="lbl">WEATHER</div></div>
-      <div class="node"><div class="big">⛰️</div><div class="lbl">TERRAIN</div></div>
-      <div class="node"><div class="big">👁️</div><div class="lbl">VISUAL</div></div>
-    </div>
-    <div class="fuse">▼ &nbsp; FUSION LAYER — agreement builds confidence &nbsp; ▼</div>
-  </section>
-
-  <section class="sec">
-    <h2><span class="n">04</span> Principles</h2>
+    <h2><span class="n">03</span> Nothing is free</h2>
+    <p class="lead">Every lever has a cost, and the art of the design is the balance between them.</p>
     <div class="grid">
-      <div class="card"><div class="ic">A</div><h3>Adaptive</h3><p>Weighs each signal by how trustworthy it is in the moment.</p></div>
-      <div class="card"><div class="ic">V</div><h3>Verified</h3><p>No single channel decides alone — the picture needs corroboration.</p></div>
-      <div class="card"><div class="ic">A</div><h3>Awareness</h3><p>A fuller view from combining perspectives, not stacking one louder.</p></div>
+      <div class="card"><h3>Bigger fan</h3><p>More thrust and better propulsive efficiency — but more weight, drag, ground-clearance trouble, and nacelle.</p></div>
+      <div class="card"><h3>Hotter core</h3><p>Better thermal efficiency — but more NOₓ, harder cooling, and shorter part life if the materials can't keep up.</p></div>
+      <div class="card"><h3>Open rotor</h3><p>Huge efficiency upside — but noise and integration challenges that ducted fans don't have.</p></div>
     </div>
   </section>
 
   <footer>
-    <div class="mono">PROJECT AVA · CONCEPT SHOWCASE</div>
-    <p>A personal concept exploration of sensor-fusion principles for civilian aviation. Vision only — no technical specifications.</p>
+    <div class="mono">PROJECT AVA · CONCEPT EXPLORATION</div>
+    <p>A personal project exploring commercial jet-engine efficiency. Educational concept — figures are representative of public, real-world engines, not a specification.</p>
+    <p class="srcnote">Representative figures drawn from public sources incl. Wikipedia (Turbofan, CFM RISE, PW1000G) and manufacturer announcements. See the engineering page for detail.</p>
   </footer>
 
 </div>

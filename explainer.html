@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project AVA — The Engineering</title>
+<meta name="description" content="How commercial jet-engine efficiency actually works: thermal vs propulsive efficiency, bypass ratio, pressure ratio, turbine temperature, materials, and the trade-offs.">
+<style>
+  :root{
+    --bg:#070a0f; --panel:#0e1621; --line:#1d2a3a; --ink:#e8f0f8; --muted:#8aa0b6;
+    --accent:#35e0c9; --accent2:#4aa3ff; --hot:#ff8a3c; --glow:rgba(53,224,201,.3);
+    --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
+    --sans:"Segoe UI",system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box} html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.7;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:0 20px}
+  a{color:var(--accent)}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:20px 0;border-bottom:1px solid var(--line);
+       position:sticky;top:0;background:rgba(7,10,15,.9);backdrop-filter:blur(8px);z-index:10}
+  .logo{font-family:var(--mono);letter-spacing:.3em;font-weight:600}
+  .bar a{text-decoration:none;font-family:var(--mono);font-size:12px;letter-spacing:.15em}
+
+  h1{font-size:clamp(34px,6vw,56px);line-height:1.05;margin:50px 0 10px}
+  .dek{color:var(--muted);font-size:19px;margin:0 0 10px}
+  .toc{border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin:30px 0;background:var(--panel)}
+  .toc h4{margin:0 0 10px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted)}
+  .toc ol{margin:0;padding-left:20px;columns:2;color:var(--ink)}
+  @media(max-width:640px){.toc ol{columns:1}}
+  .toc a{text-decoration:none}
+
+  h2{font-size:27px;margin:54px 0 6px;padding-top:20px;border-top:1px solid var(--line);display:flex;gap:12px;align-items:baseline}
+  h2 .n{font-family:var(--mono);font-size:14px;color:var(--accent)}
+  h3{font-size:18px;margin:28px 0 6px;color:var(--accent2)}
+  p{margin:12px 0}
+  em{color:var(--ink);font-style:normal;border-bottom:1px dotted var(--muted)}
+  strong{color:#fff}
+
+  .box{border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:8px;padding:14px 18px;margin:22px 0;background:var(--panel)}
+  .box.hot{border-left-color:var(--hot)}
+  .formula{font-family:var(--mono);text-align:center;font-size:17px;color:var(--accent);background:var(--panel);
+           border:1px solid var(--line);border-radius:10px;padding:18px;margin:22px 0}
+
+  table{width:100%;border-collapse:collapse;margin:22px 0;font-size:14px}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+  th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+  td:first-child{color:var(--ink);font-weight:500}
+  .mono{font-family:var(--mono)}
+
+  footer{margin:60px 0 40px;padding-top:24px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+  .refs{font-size:13px;color:var(--muted)}
+  .refs li{margin:6px 0}
+</style>
+</head>
+<body>
+<div class="bar wrap" style="max-width:820px">
+  <div class="logo">AVA // ENGINEERING</div>
+  <div><a href="index.html">← HOME</a> &nbsp; <a href="engine-3d.html">3D →</a></div>
+</div>
+
+<div class="wrap">
+  <h1>How you win a percent of fuel efficiency</h1>
+  <p class="dek">A commercial turbofan is a chain of compromises tuned toward one number: how far it flies per kilogram of fuel. Here's where that number actually comes from, and every lever a high-efficiency design pulls.</p>
+
+  <div class="toc">
+    <h4>CONTENTS</h4>
+    <ol>
+      <li><a href="#overall">The two efficiencies</a></li>
+      <li><a href="#propulsive">Propulsive: move air gently</a></li>
+      <li><a href="#thermal">Thermal: hotter, higher pressure</a></li>
+      <li><a href="#materials">Materials &amp; cooling</a></li>
+      <li><a href="#weight">Weight &amp; aerodynamics</a></li>
+      <li><a href="#frontier">The frontier: open fan</a></li>
+      <li><a href="#tradeoffs">The trade-offs</a></li>
+      <li><a href="#numbers">Reference numbers</a></li>
+    </ol>
+  </div>
+
+  <h2 id="overall"><span class="n">01</span> The two efficiencies</h2>
+  <p>Overall efficiency — fuel energy in versus propulsive work out — is the product of two independent things. This is the single most useful idea in engine design, because it tells you there are two separate battles:</p>
+  <div class="formula">η<sub>overall</sub> = η<sub>thermal</sub> × η<sub>propulsive</sub></div>
+  <p><strong>Thermal efficiency</strong> is how well the <em>core</em> (compressor → combustor → turbine) converts fuel into mechanical power. <strong>Propulsive efficiency</strong> is how well that power is converted into actual thrust without throwing energy away in a fast exhaust jet. A brilliant core attached to a bad propulsor is still a bad engine, and vice-versa.</p>
+  <div class="box">
+    <strong>The intuition.</strong> Thrust = mass flow × change in velocity. You can get a given thrust by throwing a <em>little</em> air <em>very fast</em>, or a <em>lot</em> of air <em>slightly faster</em>. The wasted energy is the leftover kinetic energy in the exhaust — and that scales with velocity <em>squared</em>. So moving more air, more gently, is fundamentally cheaper. That one fact drives the entire history of the turbofan.
+  </div>
+
+  <h2 id="propulsive"><span class="n">02</span> Propulsive efficiency: move a lot of air, gently</h2>
+  <p>The <strong>bypass ratio (BPR)</strong> is the mass of air the fan pushes <em>around</em> the core divided by the mass that goes <em>through</em> it. Early jets were pure turbojets (BPR 0) — all the air went through the hot core and left as a screaming, wasteful jet. Modern airliner engines send the large majority of their air around the core.</p>
+  <ul>
+    <li><span class="mono">BPR ~0–1</span> — turbojets and low-bypass (fast, loud, thirsty; now mostly military).</li>
+    <li><span class="mono">BPR ~5–12.5</span> — modern high-bypass commercial engines. The Pratt &amp; Whitney PW1000G geared turbofan reaches about <strong>12.5:1</strong>.</li>
+    <li><span class="mono">effective BPR &gt;30</span> — open (unducted) fans, the frontier.</li>
+  </ul>
+  <h3>The geared fan trick</h3>
+  <p>There's a conflict: a big fan wants to turn <em>slowly</em> (its blade tips go supersonic and lose efficiency otherwise), but the low-pressure turbine driving it wants to turn <em>fast</em> (it's small and makes more power per stage at speed). For decades they were bolted to the same shaft, forcing a compromise. The <strong>geared turbofan</strong> puts a planetary reduction gearbox between them, so the fan turns slowly and the turbine turns fast — <em>each at its own optimum</em>. That decoupling is what unlocked bypass ratios past 12:1.</p>
+
+  <h2 id="thermal"><span class="n">03</span> Thermal efficiency: hotter and higher-pressure</h2>
+  <p>The core is a Brayton cycle, and its efficiency climbs with two things, pushed together:</p>
+  <h3>Overall pressure ratio (OPR)</h3>
+  <p>How much the air is compressed from inlet to combustor. More compression extracts more work from each kilo of fuel. Older engines sat around <span class="mono">OPR 30</span>; modern large engines like the GE9X reach roughly <span class="mono">OPR 60:1</span>. The limit is that compressed air gets <em>hot</em> just from being squeezed, which eats into the headroom you have before the turbine.</p>
+  <h3>Turbine inlet temperature (TIT)</h3>
+  <p>The hotter the gas entering the turbine, the more energy you can extract. Modern cores run turbine inlet temperatures <strong>above 1,500°C</strong> — and here's the remarkable part: <em>that is hotter than the melting point of the metal the blades are made from.</em> The blades survive only because of how they're cooled and coated (next section). Raising OPR and TIT <em>together</em> is the main thermal-efficiency lever.</p>
+  <div class="box hot">
+    <strong>Why "together"?</strong> Raising temperature without raising pressure, or vice-versa, quickly hits diminishing returns and can even hurt. The gains come from moving both up the cycle in step — which is exactly why thermal-efficiency progress is slow and materials-limited.
+  </div>
+
+  <h2 id="materials"><span class="n">04</span> Materials &amp; cooling: surviving the core</h2>
+  <p>If you want a hotter core, you need parts that tolerate it. This is where a huge amount of real efficiency hides:</p>
+  <ul>
+    <li><strong>Single-crystal superalloy blades</strong> — turbine blades grown as one crystal, with no grain boundaries to creep or crack under load and heat.</li>
+    <li><strong>Film cooling</strong> — cool air bled from the compressor is routed through tiny holes in the blades, forming a protective film over the surface. Clever, but every kilo of air used for cooling is a kilo not making thrust.</li>
+    <li><strong>Thermal barrier coatings</strong> — ceramic coatings that insulate the metal from the gas.</li>
+    <li><strong>Ceramic matrix composites (CMCs)</strong> — the big recent step. CMCs tolerate high heat with <em>far less cooling air</em>, freeing that air to do useful work. The GE9X uses CMCs in the hot section. Less cooling bleed is a direct efficiency gain.</li>
+  </ul>
+
+  <h2 id="weight"><span class="n">05</span> Weight &amp; aerodynamics</h2>
+  <p>Efficiency isn't only thermodynamics — a lighter engine burns less fuel carrying itself around.</p>
+  <ul>
+    <li><strong>Composite fan blades &amp; case</strong> — the fan is the largest-diameter part of the engine, so weight saved there counts double. Carbon-fibre blades and casings cut substantial mass.</li>
+    <li><strong>3D aerodynamic blading</strong> — computational design of blade shapes that squeeze a little more efficiency from every compressor and turbine stage.</li>
+    <li><strong>Tighter tip clearances &amp; sealing</strong> — air that leaks around a blade tip does no work. Minimising those gaps, and better seals, recovers fractions of a percent that add up.</li>
+  </ul>
+
+  <h2 id="frontier"><span class="n">06</span> The frontier: the open fan</h2>
+  <p>The nacelle around a ducted fan adds weight and drag, and it physically caps how big the fan can be. The boldest concept — such as <strong>CFM's RISE program</strong> — removes the duct entirely: a single large <strong>open (unducted) rotor</strong> at the front, followed by a stage of variable-pitch stator vanes. That pushes the effective bypass ratio far beyond anything a ducted fan can reach.</p>
+  <p>The stated goal is around a <strong>20% reduction in fuel burn and CO₂</strong> versus today's engines, designed to run on up to 100% sustainable aviation fuel (SAF) and compatible with hydrogen, with a target entry into service in the <strong>mid-2030s</strong>. The hard parts are noise and installing a huge unducted rotor on an airframe — real engineering problems, not solved yet.</p>
+
+  <h2 id="tradeoffs"><span class="n">07</span> Nothing is free</h2>
+  <table>
+    <tr><th>Lever</th><th>Buys you</th><th>Costs you</th></tr>
+    <tr><td>Bigger / higher-bypass fan</td><td>Propulsive efficiency, thrust, less noise</td><td>Weight, drag, ground clearance, nacelle</td></tr>
+    <tr><td>Higher OPR</td><td>Thermal efficiency</td><td>Hotter compressor exit, less temp headroom</td></tr>
+    <tr><td>Higher turbine temp</td><td>Thermal efficiency</td><td>More NOₓ, harder cooling, part life</td></tr>
+    <tr><td>Open rotor</td><td>Largest efficiency jump available</td><td>Noise, airframe integration</td></tr>
+    <tr><td>More cooling air</td><td>Survivable hot section</td><td>Air diverted from making thrust</td></tr>
+  </table>
+  <p>A real design is a negotiated settlement between all of these, tuned to the mission: a short-haul narrowbody and a long-haul widebody land in different places.</p>
+
+  <h2 id="numbers"><span class="n">08</span> Reference numbers</h2>
+  <p>Representative public figures, to anchor intuition — not a spec.</p>
+  <table>
+    <tr><th>Parameter</th><th>Older gen</th><th>Modern</th></tr>
+    <tr><td>Bypass ratio</td><td>~5:1</td><td>~10–12.5:1 (open fan: effective &gt;30)</td></tr>
+    <tr><td>Overall pressure ratio</td><td>~30:1</td><td>~50–60:1</td></tr>
+    <tr><td>Turbine inlet temp</td><td>~1,300°C</td><td>&gt;1,500°C</td></tr>
+    <tr><td>Cruise TSFC (lb/lbf·h)</td><td>~0.60</td><td>~0.49</td></tr>
+    <tr><td>Hot-section material</td><td>Superalloy + cooling</td><td>+ CMCs, less cooling</td></tr>
+  </table>
+
+  <footer>
+    <p><strong>Sources &amp; further reading</strong></p>
+    <ul class="refs">
+      <li><a href="https://en.wikipedia.org/wiki/Turbofan">Turbofan — Wikipedia</a> (efficiency definitions, BPR, OPR, TIT, TSFC, geared fan)</li>
+      <li><a href="https://en.wikipedia.org/wiki/CFM_International_RISE">CFM International RISE — Wikipedia</a> (open fan, ~20% fuel burn, SAF/H₂, mid-2030s)</li>
+      <li><a href="https://en.wikipedia.org/wiki/Pratt_%26_Whitney_PW1000G">Pratt &amp; Whitney PW1000G — Wikipedia</a> (geared turbofan, BPR ~12.5:1)</li>
+      <li><a href="https://en.wikipedia.org/wiki/Overall_pressure_ratio">Overall pressure ratio — Wikipedia</a></li>
+      <li><a href="https://en.wikipedia.org/wiki/General_Electric_GE9X">General Electric GE9X — Wikipedia</a> (OPR ~60, CMCs, composite fan)</li>
+    </ul>
+    <p style="margin-top:20px">Project AVA — educational concept exploration. Figures are representative of real public-domain engines and intended for understanding, not as a design specification.</p>
+  </footer>
+</div>
+</body>
+</html>

@@ -4,19 +4,25 @@
     {
       "type": "msedge",
       "request": "launch",
-      "name": "Open AVA site",
+      "name": "Open AVA — Home",
       "file": "${workspaceFolder}/index.html"
     },
     {
       "type": "msedge",
       "request": "launch",
-      "name": "Open AVA 3D model",
-      "file": "${workspaceFolder}/plane-3d.html"
+      "name": "Open AVA — 3D Turbofan Cutaway",
+      "file": "${workspaceFolder}/engine-3d.html"
+    },
+    {
+      "type": "msedge",
+      "request": "launch",
+      "name": "Open AVA — Engineering explainer",
+      "file": "${workspaceFolder}/explainer.html"
     },
     {
       "type": "chrome",
       "request": "launch",
-      "name": "Open AVA site (Chrome)",
+      "name": "Open AVA — Home (Chrome)",
       "file": "${workspaceFolder}/index.html"
     }
   ]
