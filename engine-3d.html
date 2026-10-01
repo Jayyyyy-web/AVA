@@ -152,8 +152,10 @@ const darkMat  = new THREE.MeshStandardMaterial({color:0x222b36, metalness:0.8, 
 // shafts: LP (thin, long) + HP drum (shorter, fatter)
 const lpShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,11,16), darkMat);
 lpShaft.rotation.x = Math.PI/2; engine.add(lpShaft);
+const hpDrumGrp = new THREE.Group(); hpDrumGrp.position.z = 1.1;
 const hpDrum = new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.32,3.0,24), new THREE.MeshStandardMaterial({color:0x2c3845, metalness:0.85, roughness:0.35}));
-hpDrum.rotation.x = Math.PI/2; hpDrum.position.z = 1.1; hpRotors.push(hpDrum); engine.add(hpDrum);
+hpDrum.rotation.x = Math.PI/2; hpDrumGrp.add(hpDrum);
+hpRotors.push(hpDrumGrp); engine.add(hpDrumGrp);
 
 // ---- blade-row builders ----
 function rotorRow(z, tipR, hubR, n, color, emissive, pitch){
@@ -243,8 +245,10 @@ const lptR = [0.78,0.88,0.98,1.06];
 lptR.forEach((r,i)=>{ const ro=rotorRow(z, r, 0.3, 30, COL.turb, 0.22, -0.5); lpRotors.push(ro); engine.add(ro); statorRow(z-0.18, r, 0.3, 32); z-=0.4; });
 
 // ---- exhaust cone + variable nozzle petals ----
+const exGrp = new THREE.Group(); exGrp.position.z = z-0.5;
 const exCone = new THREE.Mesh(new THREE.ConeGeometry(0.55,1.5,28), metalMat(0x2a3340,0.05));
-exCone.rotation.x = Math.PI/2; exCone.position.z = z-0.5; lpRotors.push(exCone); engine.add(exCone);
+exCone.rotation.x = -Math.PI/2; exGrp.add(exCone); // points aft
+lpRotors.push(exGrp); engine.add(exGrp);
 for(let i=0;i<14;i++){
   const p = new THREE.Group();
   const petal = new THREE.Mesh(new THREE.BoxGeometry(0.22,0.5,0.03), metalMat(0x3a4653,0.06));
