@@ -3,47 +3,59 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Project AVA — Turbofan 3D Cutaway</title>
-<meta name="description" content="Detailed interactive 3D cutaway of a commercial turbofan — fan, LP booster, HP compressor, combustor, HP/LP turbines — with animated airflow showing where efficiency is won.">
+<title>Project AVA — Turbofan Flight Deck</title>
+<meta name="description" content="Interactive 3D turbofan over a cloudy sky — adjust cruise speed and watch fan speed, fuel burn and flight time between two airports update live.">
 <style>
   :root{
-    --bg:#05070c; --line:#1d2a3a; --ink:#e8f0f8; --muted:#8aa0b6;
+    --line:#2a3a4d; --ink:#eaf2fa; --muted:#9fb3c6;
     --fan:#4aa3ff; --comp:#35e0c9; --comb:#ff8a3c; --turb:#ff5a4a; --byp:#7fb3ff; --neon:#38f0ff;
     --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,monospace;
     --sans:"Segoe UI",system-ui,-apple-system,sans-serif;
+    --glass:rgba(10,20,32,.62);
   }
   *{box-sizing:border-box} html,body{margin:0;height:100%}
-  body{color:var(--ink);font-family:var(--sans);overflow:hidden;
-       background:
-         radial-gradient(1100px 700px at 72% 18%, rgba(56,120,180,.22), transparent 60%),
-         radial-gradient(900px 650px at 18% 80%, rgba(53,224,201,.14), transparent 60%),
-         radial-gradient(1200px 900px at 50% 50%, #0a1120, #05070c 75%);}
+  body{color:var(--ink);font-family:var(--sans);overflow:hidden;background:#8dc4e8}
   #app{position:fixed;inset:0}
   canvas{display:block}
   .hud{position:fixed;inset:0;pointer-events:none;z-index:2}
   .bar{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;
-       padding:16px 22px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,rgba(5,7,12,.92),transparent)}
-  .logo{font-family:var(--mono);letter-spacing:.3em;font-weight:600;font-size:14px}
-  .bar a{pointer-events:auto;color:var(--comp);text-decoration:none;font-family:var(--mono);font-size:12px;letter-spacing:.15em}
-  .panel{position:absolute;left:22px;top:72px;width:280px;border:1px solid var(--line);border-radius:12px;
-         padding:16px;background:rgba(8,12,20,.8);backdrop-filter:blur(7px)}
-  .panel h4{margin:0 0 12px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted)}
-  .stage{display:flex;gap:10px;align-items:flex-start;margin:10px 0}
+       padding:16px 22px;background:linear-gradient(180deg,rgba(6,14,24,.55),transparent)}
+  .logo{font-family:var(--mono);letter-spacing:.3em;font-weight:600;font-size:14px;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+  .bar a{pointer-events:auto;color:#eaf6ff;text-decoration:none;font-family:var(--mono);font-size:12px;letter-spacing:.15em;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+  .panel{position:absolute;left:18px;top:66px;width:262px;border:1px solid var(--line);border-radius:12px;
+         padding:15px;background:var(--glass);backdrop-filter:blur(9px)}
+  .panel h4{margin:0 0 11px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;color:var(--muted)}
+  .stage{display:flex;gap:10px;align-items:flex-start;margin:9px 0}
   .stage .sw{width:12px;height:12px;border-radius:3px;margin-top:4px;flex:none;box-shadow:0 0 10px currentColor}
   .stage b{font-size:13px;display:block}
   .stage span{font-size:11.5px;color:var(--muted);line-height:1.4}
-  .ctrls{position:absolute;right:22px;top:72px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;
-         background:rgba(8,12,20,.8);backdrop-filter:blur(7px);pointer-events:auto;font-family:var(--mono);font-size:11px;letter-spacing:.08em}
-  .ctrls label{display:flex;align-items:center;gap:8px;margin:7px 0;color:var(--muted);cursor:pointer}
+  .ctrls{position:absolute;right:18px;top:66px;border:1px solid var(--line);border-radius:12px;padding:11px 13px;
+         background:var(--glass);backdrop-filter:blur(9px);pointer-events:auto;font-family:var(--mono);font-size:11px;letter-spacing:.08em}
+  .ctrls label{display:flex;align-items:center;gap:8px;margin:6px 0;color:var(--muted);cursor:pointer}
   .ctrls input{accent-color:var(--neon);cursor:pointer}
-  .flowtag{position:absolute;top:50%;left:50%;transform:translate(-50%,-180px);font-family:var(--mono);
-           font-size:11px;letter-spacing:.3em;color:var(--muted);opacity:.65}
-  .concept{position:absolute;right:22px;bottom:18px;max-width:290px;border:1px dashed var(--comp);border-radius:8px;
-           padding:10px 14px;font-family:var(--mono);font-size:11px;color:#bdeee6;background:rgba(53,224,201,.06);text-align:right}
-  .hint{position:absolute;bottom:18px;left:22px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.15em;
-        animation:fade 3s ease 5s forwards}
-  @keyframes fade{to{opacity:.25}}
-  .loading{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);letter-spacing:.3em;color:var(--muted)}
+
+  /* flight deck */
+  .deck{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:min(880px,calc(100% - 32px));
+        border:1px solid var(--line);border-radius:14px;padding:14px 18px;background:var(--glass);
+        backdrop-filter:blur(10px);pointer-events:auto;box-shadow:0 10px 40px -16px rgba(0,0,0,.6)}
+  .deck .speedrow{display:flex;align-items:center;gap:14px}
+  .deck .speedrow label{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--muted);white-space:nowrap}
+  .deck input[type=range]{flex:1;accent-color:var(--neon);height:4px;cursor:pointer}
+  .deck .spdval{font-family:var(--mono);font-size:16px;color:var(--neon);min-width:92px;text-align:right}
+  .gauges{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
+  @media(max-width:680px){.gauges{grid-template-columns:repeat(2,1fr)}}
+  .g{border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:rgba(8,16,26,.5);text-align:center}
+  .g .v{font-family:var(--mono);font-size:17px;font-weight:600;color:var(--ink)}
+  .g .v small{font-size:11px;color:var(--muted)}
+  .g .l{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--muted);margin-top:3px;text-transform:uppercase}
+  .route{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap;justify-content:center}
+  .route select{font-family:var(--mono);font-size:12px;background:rgba(6,14,24,.85);color:var(--ink);
+    border:1px solid var(--line);border-radius:8px;padding:6px 8px;cursor:pointer}
+  .route .arrow{color:var(--neon);font-size:16px}
+  .note{font-family:var(--mono);font-size:9.5px;color:var(--muted);text-align:center;margin-top:9px;letter-spacing:.05em}
+  .concept{position:absolute;right:18px;bottom:184px;max-width:260px;border:1px dashed var(--comp);border-radius:8px;
+           padding:9px 12px;font-family:var(--mono);font-size:10.5px;color:#cfeee8;background:rgba(10,30,28,.5);text-align:right}
+  .loading{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);letter-spacing:.3em;color:#06324a;background:#8dc4e8}
 </style>
 </head>
 <body>
@@ -51,26 +63,49 @@
 <div class="loading" id="loading">BUILDING ENGINE…</div>
 <div class="hud">
   <div class="bar">
-    <div class="logo">AVA // TURBOFAN CUTAWAY</div>
+    <div class="logo">AVA // TURBOFAN FLIGHT DECK</div>
     <div><a href="explainer.html">ENGINEERING</a> &nbsp;·&nbsp; <a href="index.html">HOME</a></div>
   </div>
-  <div class="flowtag">◄ ◄ ◄ &nbsp; AIRFLOW &nbsp; ◄ ◄ ◄</div>
+
   <div class="panel">
     <h4>STAGES &amp; WHERE EFFICIENCY IS WON</h4>
-    <div class="stage"><span class="sw" style="color:var(--fan)"></span><div><b>Fan</b><span>Moves most of the air <em>around</em> the core — the big propulsive lever (bypass).</span></div></div>
-    <div class="stage"><span class="sw" style="color:var(--comp)"></span><div><b>LP booster + HP compressor</b><span>Many rotor+stator stages squeeze the core air. Higher pressure ratio → better thermal efficiency.</span></div></div>
-    <div class="stage"><span class="sw" style="color:var(--comb)"></span><div><b>Annular combustor</b><span>Fuel burns. Hotter gas (&gt;1500°C) = more work per kg of fuel.</span></div></div>
-    <div class="stage"><span class="sw" style="color:var(--turb)"></span><div><b>HP + LP turbines</b><span>Extract power to drive the compressor &amp; fan. Materials set the heat limit.</span></div></div>
-    <div class="stage"><span class="sw" style="color:var(--byp)"></span><div><b>Bypass flow</b><span>Cool air around the core through guide-vane struts — most of the thrust, quietly.</span></div></div>
+    <div class="stage"><span class="sw" style="color:var(--fan)"></span><div><b>Fan</b><span>Moves most air <em>around</em> the core — the big propulsive lever (bypass).</span></div></div>
+    <div class="stage"><span class="sw" style="color:var(--comp)"></span><div><b>Compressor</b><span>Booster + HP stages squeeze the air. Higher pressure ratio → more thermal efficiency.</span></div></div>
+    <div class="stage"><span class="sw" style="color:var(--comb)"></span><div><b>Combustor</b><span>Fuel burns hot (&gt;1500°C) — more work per kg of fuel.</span></div></div>
+    <div class="stage"><span class="sw" style="color:var(--turb)"></span><div><b>Turbines</b><span>HP + LP stages extract power to drive the compressor &amp; fan.</span></div></div>
   </div>
+
   <div class="ctrls">
     <label><input type="checkbox" id="cNacelle" checked> NACELLE</label>
     <label><input type="checkbox" id="cFlow" checked> AIRFLOW</label>
     <label><input type="checkbox" id="cSpin" checked> ROTATION</label>
     <label><input type="checkbox" id="cAuto" checked> AUTO-ORBIT</label>
   </div>
-  <div class="hint">DRAG · ROTATE &nbsp; | &nbsp; SCROLL · ZOOM</div>
-  <div class="concept">✈ CONCEPT CUTAWAY — schematic, not to scale; illustrates principles, not a design.</div>
+
+  <div class="concept">✈ CONCEPT — schematic engine; fuel &amp; time figures are simplified estimates for a typical twinjet, not real performance data.</div>
+
+  <div class="deck">
+    <div class="speedrow">
+      <label>CRUISE SPEED</label>
+      <input type="range" id="speed" min="300" max="980" step="5" value="850">
+      <span class="spdval" id="spdval">850 km/h</span>
+    </div>
+    <div class="gauges">
+      <div class="g"><div class="v" id="gN1">—</div><div class="l">Fan speed N1</div></div>
+      <div class="g"><div class="v" id="gMach">—</div><div class="l">Mach (approx)</div></div>
+      <div class="g"><div class="v" id="gBurn">—</div><div class="l">Fuel burn</div></div>
+      <div class="g"><div class="v" id="gEff">—</div><div class="l">Fuel / 100 km</div></div>
+      <div class="g"><div class="v" id="gEta">—</div><div class="l">Flight time</div></div>
+    </div>
+    <div class="route">
+      <select id="from"></select>
+      <span class="arrow">✈ →</span>
+      <select id="to"></select>
+      <div class="g" style="margin-left:8px"><div class="v" id="gDist">—</div><div class="l">Great-circle distance</div></div>
+      <div class="g"><div class="v" id="gFuel">—</div><div class="l">Trip fuel (est.)</div></div>
+    </div>
+    <div class="note">Drag to rotate · scroll to zoom · move the speed slider to see fan speed, fuel burn and flight time respond</div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -82,145 +117,133 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"></script>
 <script>
-const app = document.getElementById('app');
 const scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2(0x05070c, 0.028);
 
-const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.1, 200);
-camera.position.set(10, 3.6, 10);
+// ---------- sky background ----------
+function skyTexture(){
+  const c=document.createElement('canvas'); c.width=16; c.height=256;
+  const g=c.getContext('2d'); const grd=g.createLinearGradient(0,0,0,256);
+  grd.addColorStop(0.00,'#1c5a93'); grd.addColorStop(0.45,'#3f8fc6');
+  grd.addColorStop(0.75,'#9fd0ec'); grd.addColorStop(1.00,'#e9f5fc');
+  g.fillStyle=grd; g.fillRect(0,0,16,256);
+  const t=new THREE.CanvasTexture(c); t.mapping=THREE.EquirectangularReflectionMapping; return t;
+}
+scene.background = skyTexture();
+scene.fog = new THREE.Fog(0xbfe0f2, 40, 120);
 
-const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+// ---------- clouds (procedural puffs) ----------
+function cloudTexture(){
+  const s=256, c=document.createElement('canvas'); c.width=c.height=s;
+  const g=c.getContext('2d');
+  for(let i=0;i<26;i++){
+    const x=s*0.5+(Math.random()-0.5)*s*0.62, y=s*0.5+(Math.random()-0.5)*s*0.4;
+    const r=s*(0.10+Math.random()*0.18);
+    const rad=g.createRadialGradient(x,y,0,x,y,r);
+    rad.addColorStop(0,'rgba(255,255,255,0.95)'); rad.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle=rad; g.beginPath(); g.arc(x,y,r,0,7); g.fill();
+  }
+  return new THREE.CanvasTexture(c);
+}
+const cloudTex = cloudTexture();
+const clouds = new THREE.Group();
+for(let i=0;i<34;i++){
+  const m=new THREE.Sprite(new THREE.SpriteMaterial({map:cloudTex, transparent:true,
+    opacity:0.45+Math.random()*0.4, depthWrite:false, fog:true}));
+  const ang=Math.random()*Math.PI*2, rad=48+Math.random()*34, h=-8+Math.random()*34;
+  m.position.set(Math.cos(ang)*rad, h, Math.sin(ang)*rad);
+  const sc=16+Math.random()*30; m.scale.set(sc, sc*0.58, 1);
+  clouds.add(m);
+}
+scene.add(clouds);
+
+// ---------- renderer / camera ----------
+const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 0.1, 400);
+camera.position.set(10, 3.4, 10);
+const renderer = new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
-app.appendChild(renderer.domElement);
+renderer.toneMappingExposure = 1.05;
+document.getElementById('app').appendChild(renderer.domElement);
 
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
-controls.autoRotate = true;
-controls.autoRotateSpeed = 0.5;
-controls.minDistance = 6;
-controls.maxDistance = 34;
+controls.autoRotate = true; controls.autoRotateSpeed = 0.5;
+controls.minDistance = 6; controls.maxDistance = 30;
 
-// bloom post-processing for the futuristic glow
 const composer = new THREE.EffectComposer(renderer);
 composer.addPass(new THREE.RenderPass(scene, camera));
-const bloom = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.85, 0.5, 0.82);
+const bloom = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.7, 0.5, 0.85);
 composer.addPass(bloom);
 
-// ---- starfield background for depth ----
-(function starfield(){
-  const SN = 1400, sp = new Float32Array(SN*3), sc = new Float32Array(SN*3);
-  const c1 = new THREE.Color(0x9fc4ff), c2 = new THREE.Color(0x35e0c9), c3 = new THREE.Color(0xffffff);
-  for(let i=0;i<SN;i++){
-    // scatter on a far shell so stars sit behind the engine from every angle
-    const r = 40 + Math.random()*55, th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1);
-    sp[i*3]   = r*Math.sin(ph)*Math.cos(th);
-    sp[i*3+1] = r*Math.sin(ph)*Math.sin(th);
-    sp[i*3+2] = r*Math.cos(ph);
-    const c = Math.random()<0.15 ? c2 : (Math.random()<0.4 ? c1 : c3);
-    const b = 0.4 + Math.random()*0.6;
-    sc[i*3]=c.r*b; sc[i*3+1]=c.g*b; sc[i*3+2]=c.b*b;
-  }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(sp,3));
-  g.setAttribute('color', new THREE.BufferAttribute(sc,3));
-  const stars = new THREE.Points(g, new THREE.PointsMaterial({size:0.35, vertexColors:true, transparent:true, opacity:0.9, depthWrite:false, sizeAttenuation:true}));
-  scene.add(stars);
-  scene.userData.stars = stars;
-})();
+// ---------- lighting (daytime) ----------
+scene.add(new THREE.HemisphereLight(0xcfeaff, 0x33506a, 0.85));
+const sun = new THREE.DirectionalLight(0xffffff, 1.3); sun.position.set(8,12,6); scene.add(sun);
+const fill = new THREE.DirectionalLight(0x9fd0ec, 0.4); fill.position.set(-7,-2,-5); scene.add(fill);
 
-scene.add(new THREE.AmbientLight(0x5a7694, 0.65));
-const key = new THREE.DirectionalLight(0xffffff, 1.15); key.position.set(6,9,7); scene.add(key);
-const rim = new THREE.DirectionalLight(0x35e0c9, 0.45); rim.position.set(-7,-2,-5); scene.add(rim);
-const underglow = new THREE.PointLight(0x38f0ff, 0.6, 20); underglow.position.set(0,-4,0); scene.add(underglow);
-
-const COL = {fan:0x4aa3ff, comp:0x35e0c9, comb:0xff8a3c, turb:0xff5a4a, metal:0xaebccb, neon:0x38f0ff, dark:0x222b36};
-
-// Engine along Z. Air flows +Z (front) -> -Z (back).
-const engine = new THREE.Group();
-scene.add(engine);
-
+// ================= engine =================
+const engine = new THREE.Group(); scene.add(engine);
 const lpRotors = [], hpRotors = [];
+const COL = {fan:0x4aa3ff, comp:0x35e0c9, comb:0xff8a3c, turb:0xff5a4a, neon:0x38f0ff};
+const metalMat = (c,e=0.08)=> new THREE.MeshStandardMaterial({color:c, metalness:0.72, roughness:0.3, emissive:c, emissiveIntensity:e, side:THREE.DoubleSide});
+const darkMat  = new THREE.MeshStandardMaterial({color:0x2b3542, metalness:0.8, roughness:0.4});
 
-// materials
-const metalMat = (c, e=0.08)=> new THREE.MeshStandardMaterial({color:c, metalness:0.72, roughness:0.3, emissive:c, emissiveIntensity:e, side:THREE.DoubleSide});
-const darkMat  = new THREE.MeshStandardMaterial({color:0x222b36, metalness:0.8, roughness:0.4});
-
-// shafts: LP (thin, long) + HP drum (shorter, fatter)
 const lpShaft = new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,11,16), darkMat);
 lpShaft.rotation.x = Math.PI/2; engine.add(lpShaft);
 const hpDrumGrp = new THREE.Group(); hpDrumGrp.position.z = 1.1;
-const hpDrum = new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.32,3.0,24), new THREE.MeshStandardMaterial({color:0x2c3845, metalness:0.85, roughness:0.35}));
-hpDrum.rotation.x = Math.PI/2; hpDrumGrp.add(hpDrum);
-hpRotors.push(hpDrumGrp); engine.add(hpDrumGrp);
+const hpDrum = new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.32,3.0,24), new THREE.MeshStandardMaterial({color:0x33404e, metalness:0.85, roughness:0.35}));
+hpDrum.rotation.x = Math.PI/2; hpDrumGrp.add(hpDrum); hpRotors.push(hpDrumGrp); engine.add(hpDrumGrp);
 
-// ---- blade-row builders ----
 function rotorRow(z, tipR, hubR, n, color, emissive, pitch){
   const g = new THREE.Group(); g.position.z = z;
   const hub = new THREE.Mesh(new THREE.CylinderGeometry(hubR,hubR,0.15,20), darkMat);
   hub.rotation.x = Math.PI/2; g.add(hub);
-  const mat = metalMat(color, emissive);
-  const h = tipR - hubR;
+  const mat = metalMat(color, emissive); const h = tipR - hubR;
   for(let i=0;i<n;i++){
-    const pivot = new THREE.Group();
-    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.045, h, 0.17), mat);
-    blade.position.y = hubR + h/2; blade.rotation.y = pitch;
-    pivot.add(blade); pivot.rotation.z = (i/n)*Math.PI*2; g.add(pivot);
+    const p = new THREE.Group();
+    const b = new THREE.Mesh(new THREE.BoxGeometry(0.045, h, 0.17), mat);
+    b.position.y = hubR + h/2; b.rotation.y = pitch; p.add(b);
+    p.rotation.z = (i/n)*Math.PI*2; g.add(p);
   }
   return g;
 }
 function statorRow(z, tipR, hubR, n){
   const g = new THREE.Group(); g.position.z = z;
-  const ring = new THREE.Mesh(new THREE.TorusGeometry((tipR+hubR)/2, 0.03, 8, 40), darkMat);
-  g.add(ring);
-  const mat = new THREE.MeshStandardMaterial({color:0x3a4653, metalness:0.5, roughness:0.6, side:THREE.DoubleSide});
+  g.add(new THREE.Mesh(new THREE.TorusGeometry((tipR+hubR)/2, 0.03, 8, 40), darkMat));
+  const mat = new THREE.MeshStandardMaterial({color:0x44525f, metalness:0.5, roughness:0.6, side:THREE.DoubleSide});
   const h = tipR - hubR;
   for(let i=0;i<n;i++){
-    const pivot = new THREE.Group();
-    const vane = new THREE.Mesh(new THREE.BoxGeometry(0.035, h, 0.12), mat);
-    vane.position.y = hubR + h/2; vane.rotation.y = -0.35;
-    pivot.add(vane); pivot.rotation.z = (i/n)*Math.PI*2; g.add(pivot);
+    const p = new THREE.Group();
+    const v = new THREE.Mesh(new THREE.BoxGeometry(0.035, h, 0.12), mat);
+    v.position.y = hubR + h/2; v.rotation.y = -0.35; p.add(v);
+    p.rotation.z = (i/n)*Math.PI*2; g.add(p);
   }
   engine.add(g); return g;
 }
 
-// ---- spinner + fan ----
+// spinner + swirl
 const spinnerGrp = new THREE.Group(); spinnerGrp.position.z = 4.9;
-const spinnerCone = new THREE.Mesh(new THREE.ConeGeometry(0.42,1.0,28), metalMat(0x2a3340,0.05));
+const spinnerCone = new THREE.Mesh(new THREE.ConeGeometry(0.42,1.0,28), metalMat(0x2b3542,0.05));
 spinnerCone.rotation.x = -Math.PI/2; spinnerGrp.add(spinnerCone);
-// swirl marker on the spinner (like the painted spiral on a real engine) so rotation reads clearly
-for(let k=0;k<12;k++){ const t=k/12, ang=t*Math.PI*1.6, rr=0.05+t*0.38;
+for(let k=0;k<12;k++){ const t=k/12, a=t*Math.PI*1.6, rr=0.05+t*0.38;
   const d=new THREE.Mesh(new THREE.SphereGeometry(0.032,8,8), new THREE.MeshBasicMaterial({color:0xffffff}));
-  d.position.set(Math.cos(ang)*rr, Math.sin(ang)*rr, 0.5 - t*0.96); spinnerGrp.add(d); }
+  d.position.set(Math.cos(a)*rr, Math.sin(a)*rr, 0.5 - t*0.96); spinnerGrp.add(d); }
 lpRotors.push(spinnerGrp); engine.add(spinnerGrp);
 
 const fan = rotorRow(4.2, 2.05, 0.42, 24, COL.fan, 0.18, 0.6); lpRotors.push(fan); engine.add(fan);
-// translucent "motion" discs fill the gaps between blades so fast spin reads as a smooth blur, not a strobe
-function blurDisc(z,r,c,op){ const d=new THREE.Mesh(new THREE.RingGeometry(0.4,r,56),
-  new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:op,side:THREE.DoubleSide,depthWrite:false,blending:THREE.AdditiveBlending}));
-  d.position.z=z; return d; }
-const fanBlur = blurDisc(4.16, 2.0, 0x2a6fb0, 0.14); engine.add(fanBlur);
-// fan exit / outlet guide vanes (static) + bypass struts
+const fanBlur = new THREE.Mesh(new THREE.RingGeometry(0.4, 2.0, 56),
+  new THREE.MeshBasicMaterial({color:0x2a6fb0, transparent:true, opacity:0.14, side:THREE.DoubleSide, depthWrite:false, blending:THREE.AdditiveBlending}));
+fanBlur.position.z = 4.16; engine.add(fanBlur);
 statorRow(3.7, 2.1, 0.5, 30);
 
-// ---- LP booster (3 stages, cool) ----
 let z = 3.35;
-const boostR = [1.0,0.92,0.85];
-boostR.forEach((r,i)=>{ const ro=rotorRow(z, r, 0.33, 22, COL.comp, 0.10, 0.45); lpRotors.push(ro); engine.add(ro); statorRow(z-0.2, r, 0.33, 26); z-=0.4; });
+[1.0,0.92,0.85].forEach(r=>{ const ro=rotorRow(z,r,0.33,22,COL.comp,0.10,0.45); lpRotors.push(ro); engine.add(ro); statorRow(z-0.2,r,0.33,26); z-=0.4; });
+[0.82,0.76,0.70,0.64,0.58,0.53,0.48].forEach(r=>{ const ro=rotorRow(z,r,0.33,24,COL.comp,0.12,0.42); hpRotors.push(ro); engine.add(ro); statorRow(z-0.18,r,0.33,28); z-=0.36; });
 
-// ---- HP compressor (7 stages, shrinking) ----
-const hpcR = [0.82,0.76,0.70,0.64,0.58,0.53,0.48];
-hpcR.forEach((r,i)=>{ const ro=rotorRow(z, r, 0.33, 24, COL.comp, 0.12, 0.42); hpRotors.push(ro); engine.add(ro); statorRow(z-0.18, r, 0.33, 28); z-=0.36; });
+const diff = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.72,0.5,28,1,true), metalMat(0x37434f,0.05));
+diff.rotation.x = Math.PI/2; diff.position.z = z-0.1; engine.add(diff); z-=0.5;
 
-// diffuser cone into combustor
-const diff = new THREE.Mesh(new THREE.CylinderGeometry(0.5,0.72,0.5,28,1,true), metalMat(0x33404e,0.05));
-diff.rotation.x = Math.PI/2; diff.position.z = z-0.1; engine.add(diff);
-z -= 0.5;
-
-// ---- annular combustor (glowing) with fuel nozzles ----
 const combZ = z-0.45;
 const combOuter = new THREE.Mesh(new THREE.CylinderGeometry(0.78,0.78,1.0,36,1,true),
   new THREE.MeshStandardMaterial({color:COL.comb, emissive:COL.comb, emissiveIntensity:1.6, transparent:true, opacity:0.8, side:THREE.DoubleSide}));
@@ -228,125 +251,146 @@ combOuter.rotation.x = Math.PI/2; combOuter.position.z = combZ; engine.add(combO
 const combInner = new THREE.Mesh(new THREE.CylinderGeometry(0.4,0.4,1.0,28,1,true),
   new THREE.MeshStandardMaterial({color:0xffd08a, emissive:0xffb060, emissiveIntensity:1.4, side:THREE.DoubleSide}));
 combInner.rotation.x = Math.PI/2; combInner.position.z = combZ; engine.add(combInner);
-// fuel nozzle bumps around the front of the combustor
-for(let i=0;i<16;i++){
-  const p = new THREE.Group();
-  const nz = new THREE.Mesh(new THREE.SphereGeometry(0.08,12,12), metalMat(0xffce99,1.2));
-  nz.position.set(0,0.59, combZ+0.5); p.add(nz); p.rotation.z=(i/16)*Math.PI*2; engine.add(p);
-}
-const combLight = new THREE.PointLight(0xff8a3c, 2.6, 7); combLight.position.z = combZ; engine.add(combLight);
+for(let i=0;i<16;i++){ const p=new THREE.Group();
+  const nz=new THREE.Mesh(new THREE.SphereGeometry(0.08,12,12), metalMat(0xffce99,1.2));
+  nz.position.set(0,0.59,combZ+0.5); p.add(nz); p.rotation.z=(i/16)*Math.PI*2; engine.add(p); }
+const combLight = new THREE.PointLight(0xff8a3c, 2.4, 7); combLight.position.z = combZ; engine.add(combLight);
 z = combZ - 0.6;
 
-// ---- HP turbine (2 stages, hottest) ----
-const hptR = [0.60,0.70];
-hptR.forEach((r,i)=>{ const ro=rotorRow(z, r, 0.34, 28, COL.turb, 0.35, -0.5); hpRotors.push(ro); engine.add(ro); statorRow(z-0.18, r, 0.34, 30); z-=0.4; });
-// ---- LP turbine (4 stages, growing) ----
-const lptR = [0.78,0.88,0.98,1.06];
-lptR.forEach((r,i)=>{ const ro=rotorRow(z, r, 0.3, 30, COL.turb, 0.22, -0.5); lpRotors.push(ro); engine.add(ro); statorRow(z-0.18, r, 0.3, 32); z-=0.4; });
+[0.60,0.70].forEach(r=>{ const ro=rotorRow(z,r,0.34,28,COL.turb,0.35,-0.5); hpRotors.push(ro); engine.add(ro); statorRow(z-0.18,r,0.34,30); z-=0.4; });
+[0.78,0.88,0.98,1.06].forEach(r=>{ const ro=rotorRow(z,r,0.3,30,COL.turb,0.22,-0.5); lpRotors.push(ro); engine.add(ro); statorRow(z-0.18,r,0.3,32); z-=0.4; });
 
-// ---- exhaust cone + variable nozzle petals ----
 const exGrp = new THREE.Group(); exGrp.position.z = z-0.5;
-const exCone = new THREE.Mesh(new THREE.ConeGeometry(0.55,1.5,28), metalMat(0x2a3340,0.05));
-exCone.rotation.x = -Math.PI/2; exGrp.add(exCone); // points aft
-lpRotors.push(exGrp); engine.add(exGrp);
-for(let i=0;i<14;i++){
-  const p = new THREE.Group();
-  const petal = new THREE.Mesh(new THREE.BoxGeometry(0.22,0.5,0.03), metalMat(0x3a4653,0.06));
-  petal.position.set(0,1.0,z-0.3); petal.rotation.x=0.3; p.add(petal); p.rotation.z=(i/14)*Math.PI*2; engine.add(p);
-}
+const exCone = new THREE.Mesh(new THREE.ConeGeometry(0.55,1.5,28), metalMat(0x2b3542,0.05));
+exCone.rotation.x = -Math.PI/2; exGrp.add(exCone); lpRotors.push(exGrp); engine.add(exGrp);
+for(let i=0;i<14;i++){ const p=new THREE.Group();
+  const petal=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.5,0.03), metalMat(0x44525f,0.06));
+  petal.position.set(0,1.0,z-0.3); petal.rotation.x=0.3; p.add(petal); p.rotation.z=(i/14)*Math.PI*2; engine.add(p); }
 
-// ---- nacelle (translucent) + neon accents ----
+// nacelle + neon accents
 const nacelleGrp = new THREE.Group();
 const nacelle = new THREE.Mesh(new THREE.CylinderGeometry(2.3,1.95,9.6,56,1,true),
-  new THREE.MeshStandardMaterial({color:0x5c86b8, metalness:0.35, roughness:0.4, transparent:true, opacity:0.09, side:THREE.DoubleSide}));
-nacelle.rotation.x = Math.PI/2; nacelle.position.z = 0.0; nacelleGrp.add(nacelle);
-// wireframe skin for a techy look
-const wire = new THREE.Mesh(nacelle.geometry.clone(),
-  new THREE.MeshBasicMaterial({color:0x2b4a63, wireframe:true, transparent:true, opacity:0.18}));
+  new THREE.MeshStandardMaterial({color:0xdfeaf2, metalness:0.4, roughness:0.35, transparent:true, opacity:0.14, side:THREE.DoubleSide}));
+nacelle.rotation.x = Math.PI/2; nacelleGrp.add(nacelle);
+const wire = new THREE.Mesh(nacelle.geometry.clone(), new THREE.MeshBasicMaterial({color:0x3a6f93, wireframe:true, transparent:true, opacity:0.16}));
 wire.rotation.x = Math.PI/2; nacelleGrp.add(wire);
-// glowing intake lip + exhaust ring (these bloom)
-function neonRing(z,r,c,th){ const t=new THREE.Mesh(new THREE.TorusGeometry(r,th||0.05,16,64),
-  new THREE.MeshBasicMaterial({color:c})); t.position.z=z; nacelleGrp.add(t); return t; }
-neonRing(4.75, 2.3, COL.neon, 0.06);
-neonRing(-4.85, 1.95, COL.turb, 0.06);
-neonRing(3.7, 2.18, 0x2b6f8f, 0.03);
+function neonRing(z,r,c,th){ const t=new THREE.Mesh(new THREE.TorusGeometry(r,th||0.05,16,64), new THREE.MeshBasicMaterial({color:c})); t.position.z=z; nacelleGrp.add(t); }
+neonRing(4.75,2.3,COL.neon,0.06); neonRing(-4.85,1.95,COL.turb,0.06); neonRing(3.7,2.18,0x2b6f8f,0.03);
 engine.add(nacelleGrp);
+for(let i=0;i<10;i++){ const p=new THREE.Group();
+  const s=new THREE.Mesh(new THREE.BoxGeometry(0.06,1.1,0.4), metalMat(0x44525f,0.04));
+  s.position.set(0,1.5,3.4); s.rotation.y=0.2; p.add(s); p.rotation.z=(i/10)*Math.PI*2; engine.add(p); }
 
-// bypass duct struts (outlet guide vanes connecting core to nacelle)
-for(let i=0;i<10;i++){
-  const p = new THREE.Group();
-  const strut = new THREE.Mesh(new THREE.BoxGeometry(0.06,1.1,0.4), metalMat(0x3a4653,0.04));
-  strut.position.set(0,1.5,3.4); strut.rotation.y=0.2; p.add(strut); p.rotation.z=(i/10)*Math.PI*2; engine.add(p);
-}
-
-// holographic floor grid
-const grid = new THREE.GridHelper(120, 60, 0x1d3344, 0x0f1a24);
-grid.position.y = -3.6; engine.add(grid);
-
-// ================= airflow particles =================
-const N = 1100;
-const pos = new Float32Array(N*3), colr = new Float32Array(N*3);
-const meta = [];
+// ---------- airflow ----------
+const N = 1000;
+const pos = new Float32Array(N*3), colr = new Float32Array(N*3), meta=[];
 const cBlue=new THREE.Color(0x7fb3ff), cCyan=new THREE.Color(0x35e0c9), cHot=new THREE.Color(0xffb060), cRed=new THREE.Color(0xff5a4a);
 for(let i=0;i<N;i++){
-  const core = Math.random() < 0.4;
-  const r = core ? (0.16+Math.random()*0.42) : (1.45+Math.random()*0.7);
-  const a = Math.random()*Math.PI*2;
-  const speed = (core?0.05:0.065)+Math.random()*0.02;
-  const zz = 5.5 - Math.random()*11;
-  meta.push({core,r,a,speed});
-  pos[i*3]=Math.cos(a)*r; pos[i*3+1]=Math.sin(a)*r; pos[i*3+2]=zz;
-  const b = core?cCyan:cBlue; colr[i*3]=b.r; colr[i*3+1]=b.g; colr[i*3+2]=b.b;
+  const core=Math.random()<0.4, r=core?(0.16+Math.random()*0.42):(1.45+Math.random()*0.7), a=Math.random()*Math.PI*2;
+  meta.push({core,r,a,speed:(core?0.05:0.065)+Math.random()*0.02});
+  const zz=5.5-Math.random()*11; pos[i*3]=Math.cos(a)*r; pos[i*3+1]=Math.sin(a)*r; pos[i*3+2]=zz;
+  const b=core?cCyan:cBlue; colr[i*3]=b.r; colr[i*3+1]=b.g; colr[i*3+2]=b.b;
 }
-const pg = new THREE.BufferGeometry();
-pg.setAttribute('position', new THREE.BufferAttribute(pos,3));
-pg.setAttribute('color', new THREE.BufferAttribute(colr,3));
-const points = new THREE.Points(pg, new THREE.PointsMaterial({size:0.075, vertexColors:true, transparent:true, opacity:0.95, depthWrite:false, blending:THREE.AdditiveBlending}));
+const pg=new THREE.BufferGeometry();
+pg.setAttribute('position',new THREE.BufferAttribute(pos,3));
+pg.setAttribute('color',new THREE.BufferAttribute(colr,3));
+const points=new THREE.Points(pg,new THREE.PointsMaterial({size:0.075,vertexColors:true,transparent:true,opacity:0.95,depthWrite:false,blending:THREE.AdditiveBlending}));
 engine.add(points);
-
-let flowOn = true;
-function updateFlow(){
+let flowOn=true;
+function updateFlow(sf){
   if(!flowOn) return;
-  const p = pg.attributes.position.array, c = pg.attributes.color.array;
-  for(let i=0;i<N;i++){
-    const m = meta[i];
-    let zz = p[i*3+2] - m.speed*(1+(m.core?1.3:0));
-    if(m.core && zz<combZ+0.6 && zz>combZ-2.4) zz -= 0.06;
-    if(zz < -5.5) zz = 5.5;
+  const p=pg.attributes.position.array, c=pg.attributes.color.array;
+  for(let i=0;i<N;i++){ const m=meta[i];
+    let zz=p[i*3+2]-m.speed*(1+(m.core?1.3:0))*sf;
+    if(m.core && zz<combZ+0.6 && zz>combZ-2.4) zz-=0.06*sf;
+    if(zz<-5.5) zz=5.5;
     p[i*3+2]=zz; p[i*3]=Math.cos(m.a)*m.r; p[i*3+1]=Math.sin(m.a)*m.r;
-    if(m.core){
-      let cc=cCyan;
-      if(zz<combZ+0.7 && zz>combZ-1.2) cc=cHot; else if(zz<=combZ-1.2) cc=cRed;
-      c[i*3]=cc.r; c[i*3+1]=cc.g; c[i*3+2]=cc.b;
-    }
+    if(m.core){ let cc=cCyan; if(zz<combZ+0.7&&zz>combZ-1.2)cc=cHot; else if(zz<=combZ-1.2)cc=cRed;
+      c[i*3]=cc.r; c[i*3+1]=cc.g; c[i*3+2]=cc.b; }
   }
   pg.attributes.position.needsUpdate=true; pg.attributes.color.needsUpdate=true;
 }
 
 // center & frame
-const box = new THREE.Box3().setFromObject(engine);
-const ctr = box.getCenter(new THREE.Vector3());
-engine.position.sub(ctr);
-controls.target.set(0,0,0);
+const ctr=new THREE.Box3().setFromObject(engine).getCenter(new THREE.Vector3());
+engine.position.sub(ctr); controls.target.set(0,0,0);
 
-// UI controls
-let spinOn = true;
-document.getElementById('cNacelle').onchange = e=> nacelleGrp.visible = e.target.checked;
-document.getElementById('cFlow').onchange    = e=>{ flowOn = e.target.checked; points.visible = e.target.checked; };
-document.getElementById('cSpin').onchange    = e=> spinOn = e.target.checked;
-document.getElementById('cAuto').onchange    = e=> controls.autoRotate = e.target.checked;
+// ================= flight-deck logic =================
+const AIRPORTS = [
+  ["TPE","Taipei",25.0777,121.2328],["HKG","Hong Kong",22.308,113.9185],
+  ["HND","Tokyo",35.5494,139.7798],["ICN","Seoul",37.4602,126.4407],
+  ["SIN","Singapore",1.3644,103.9915],["PEK","Beijing",40.0799,116.6031],
+  ["DEL","Delhi",28.5562,77.1000],["DXB","Dubai",25.2532,55.3657],
+  ["LHR","London",51.4700,-0.4543],["CDG","Paris",49.0097,2.5479],
+  ["FRA","Frankfurt",50.0379,8.5622],["AMS","Amsterdam",52.3105,4.7683],
+  ["JFK","New York",40.6413,-73.7781],["LAX","Los Angeles",33.9416,-118.4085],
+  ["SFO","San Francisco",37.6213,-122.3790],["YYZ","Toronto",43.6777,-79.6248],
+  ["GRU","São Paulo",-23.4356,-46.4731],["MEX","Mexico City",19.4361,-99.0719],
+  ["JNB","Johannesburg",-26.1392,28.2460],["SYD","Sydney",-33.9399,151.1753]
+];
+function haversine(a,b){
+  const R=6371, toR=Math.PI/180;
+  const dLat=(b[2]-a[2])*toR, dLon=(b[3]-a[3])*toR;
+  const s=Math.sin(dLat/2)**2 + Math.cos(a[2]*toR)*Math.cos(b[2]*toR)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(s)));
+}
+const $=id=>document.getElementById(id);
+const fromSel=$("from"), toSel=$("to");
+AIRPORTS.forEach((ap,i)=>{
+  const o1=document.createElement("option"); o1.value=i; o1.textContent=ap[0]+" · "+ap[1]; fromSel.appendChild(o1);
+  const o2=o1.cloneNode(true); toSel.appendChild(o2);
+});
+fromSel.value="0"; toSel.value="8"; // TPE -> LHR
 
-const clock = new THREE.Clock();
+let speedKmh=850;
+function fmtTime(h){ if(!isFinite(h)||h<=0) return "—"; const H=Math.floor(h), M=Math.round((h-H)*60); return H+"h "+String(M).padStart(2,"0")+"m"; }
+function updateDeck(){
+  speedKmh=+$("speed").value;
+  $("spdval").textContent=speedKmh+" km/h";
+  // fan speed N1 (illustrative): scales with speed
+  const n1=Math.round(45 + (speedKmh-300)/(980-300)*55); // ~45–100 %
+  $("gN1").innerHTML=n1+'<small>%</small>';
+  // Mach approx at cruise altitude (speed of sound ~1062 km/h at FL350)
+  $("gMach").textContent=(speedKmh/1062).toFixed(2);
+  // fuel model (illustrative twinjet): total burn kg/h rises faster than linear
+  const burn=2400*Math.pow(speedKmh/850, 2.3);
+  $("gBurn").innerHTML=Math.round(burn).toLocaleString()+' <small>kg/h</small>';
+  const per100=burn/speedKmh*100;
+  $("gEff").innerHTML=per100.toFixed(0)+' <small>kg</small>';
+  // route
+  const A=AIRPORTS[+fromSel.value], B=AIRPORTS[+toSel.value];
+  const dist=haversine(A,B);
+  $("gDist").innerHTML=Math.round(dist).toLocaleString()+' <small>km</small>';
+  const hrs=dist/speedKmh;
+  $("gEta").textContent=fmtTime(hrs);
+  const trip=burn*hrs;
+  $("gFuel").innerHTML=(trip>=1000?(trip/1000).toFixed(1)+' t':Math.round(trip)+' kg');
+}
+$("speed").addEventListener("input", updateDeck);
+fromSel.addEventListener("change", updateDeck);
+toSel.addEventListener("change", updateDeck);
+updateDeck();
+
+// ---------- UI toggles ----------
+let spinOn=true;
+$("cNacelle").onchange=e=> nacelleGrp.visible=e.target.checked;
+$("cFlow").onchange   =e=>{ flowOn=e.target.checked; points.visible=e.target.checked; };
+$("cSpin").onchange   =e=> spinOn=e.target.checked;
+$("cAuto").onchange   =e=> controls.autoRotate=e.target.checked;
+
+// ---------- animate ----------
+const clock=new THREE.Clock();
 function animate(){
   requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), 0.05); // clamp so a backgrounded tab never jumps
+  const dt=Math.min(clock.getDelta(),0.05);
+  const sf=speedKmh/750;               // speed factor drives rotation + airflow
   if(spinOn){
-    lpRotors.forEach(r=> r.rotation.z += dt*1.8);
-    hpRotors.forEach(r=> r.rotation.z += dt*3.4);
+    lpRotors.forEach(r=> r.rotation.z += dt*1.8*sf);
+    hpRotors.forEach(r=> r.rotation.z += dt*3.4*sf);
   }
-  if(scene.userData.stars) scene.userData.stars.rotation.y += dt*0.01;
-  combLight.intensity = 2.3 + Math.sin(clock.elapsedTime*16)*0.5;
-  updateFlow();
+  clouds.rotation.y += dt*0.006;
+  combLight.intensity = 2.2 + Math.sin(clock.elapsedTime*16)*0.4;
+  updateFlow(sf);
   controls.update();
   composer.render();
 }
@@ -354,9 +398,8 @@ animate();
 document.getElementById('loading').style.display='none';
 
 addEventListener('resize', ()=>{
-  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-  composer.setSize(innerWidth, innerHeight);
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight); composer.setSize(innerWidth,innerHeight);
 });
 </script>
 </body>
